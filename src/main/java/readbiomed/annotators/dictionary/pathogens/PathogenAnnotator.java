@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -26,6 +27,7 @@ import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.conceptMapper.DictTerm;
+import org.apache.uima.fit.component.JCasCollectionReader_ImplBase;
 import org.apache.uima.fit.factory.AggregateBuilder;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -42,9 +44,13 @@ import org.cleartk.ml.jar.Train;
 import org.cleartk.ml.libsvm.LibSvmStringOutcomeDataWriter;
 import org.cleartk.util.ViewUriUtil;
 
+import com.ibm.au.research.nlp.ingestion.uima.reader.MedlineReader;
+
 import readbiomed.annotators.dictionary.utils.CharacterizationEvaluation;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
+import readbiomed.bmip.dataset.BuildDataset;
+import readbiomed.bmip.dataset.DocumentEntry;
 import uima.tt.TokenAnnotation;
 
 public class PathogenAnnotator extends CleartkAnnotator<String> {
@@ -102,7 +108,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	}
 
 	private static String getId(String string) {
-		return string.replace("http://purl.obolibrary.org/obo/NCBITaxon_", "").replaceAll("D33", "D148").replaceAll("D98", "D148");
+		return string.replace("http://purl.obolibrary.org/obo/NCBITaxon_", "").replaceAll("D33", "D148")
+				.replaceAll("D98", "D148");
 	}
 
 	@Override
@@ -117,8 +124,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		for (Entry<String, Integer> id : ids.entrySet()) {
 			List<Feature> features = new ArrayList<Feature>();
 
-			//features.addAll(getFrequency(id.getValue()));
-			//features.addAll(getTokens(jCas));
+			// features.addAll(getFrequency(id.getValue()));
+			// features.addAll(getTokens(jCas));
 			features.addAll(getMax(id.getKey(), ids));
 
 			if (isTraining()) {
@@ -219,9 +226,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 
 		return prediction;
 	}
-	
-	public static Map<String, Set<String>> annotate(Map<String, Set<String>> gt, String dictURI)
-			throws Exception {
+
+	public static Map<String, Set<String>> annotate(Map<String, Set<String>> gt, String dictURI) throws Exception {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
 		AggregateBuilder builder = new AggregateBuilder();
@@ -251,6 +257,61 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		}
 
 		ae.collectionProcessComplete();
+
+		return prediction;
+	}
+
+	private static final Pattern p = Pattern.compile("/");
+
+	/**
+	 * Read MEDLINE citations from documents collected using the NCBI web services
+	 * 
+	 * @param gt
+	 * @param dictURI
+	 * @param folderName
+	 * @return
+	 * @throws Exception
+	 * 
+	 */
+	public static Map<String, Set<String>> annotateNCBISet(Map<String, Set<String>> gt, String dictURI,
+			String folderName) throws Exception {
+		Map<String, Set<String>> prediction = new HashMap<>();
+
+		AnalysisEngine ae = AnalysisEngineFactory.createEngine(ConceptMapperFactory.create(dictURI));
+
+		JCas jCas = JCasFactory.createJCas();
+
+		for (File file : new File(folderName).listFiles()) {
+			if (file.getName().endsWith(".gz")) {
+				System.out.println(file.getName());
+
+				JCasCollectionReader_ImplBase cr = (JCasCollectionReader_ImplBase) org.apache.uima.fit.factory.CollectionReaderFactory
+						.createReader(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()));
+
+				while (cr.hasNext()) {
+					cr.getNext(jCas);
+					ae.process(jCas);
+
+					String pmid = p.split(ViewUriUtil.getURI(jCas).toString())[1].split("-")[0];
+
+					// Several sections of the citation might be considered
+					Set<String> ids = prediction.get(pmid);
+					if (ids == null) {
+						ids = new HashSet<>();
+						prediction.put(pmid, ids);
+					}
+
+					for (DictTerm e : JCasUtil.select(jCas, DictTerm.class)) {
+						ids.add(getId(e.getDictCanon()));
+					}
+
+					jCas.reset();
+				}
+			}
+
+			// Let's start with only one file for testing, remove when happy
+			break;
+		}
 
 		return prediction;
 	}
@@ -293,15 +354,53 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
 		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml";
 
-		//CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
+		Map<String, DocumentEntry> documentMap = BuildDataset
+				.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
+		Map<String, Set<String>> predictions = annotateNCBISet(gt, dictFileName,
+				"/home/antonio/Documents/UoM/documents/PubMed");
 
-		for (Map<String, Set<String>>[] sets : getFolds(gt)) {
-			Map<String, Set<String>> trainingSet = sets[0];
-			Map<String, Set<String>> testingSet = sets[1];
+		for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
+			DocumentEntry de = documentMap.get(prediction.getKey());
+			System.out.println(prediction.getKey());
 
-			train(trainingSet, dictFileName, "/home/antonio/Documents/UoM/model");
-			CharacterizationEvaluation.evaluate(testingSet,
-					test(testingSet, dictFileName, "/home/antonio/Documents/UoM/model/model.jar"));
+			Set<String> fp = new HashSet<>(prediction.getValue());
+
+			if (de != null) {
+				// What has not been matched from MeSH?
+				for (String taxon : de.getMeSHTaxon()) {
+					fp.remove(taxon);
+					if (!prediction.getValue().contains(taxon)) {
+						System.out.println("Missed MeSH " + prediction.getKey() + "/" + taxon);
+					} else {
+						System.out.println("Found MeSH " + prediction.getKey() + "/" + taxon);
+					}
+				}
+
+				// What has not been matched from GeneBank?
+				for (String taxon : de.getGeneBankTaxon()) {
+					fp.remove(taxon);
+					if (!prediction.getValue().contains(taxon)) {
+						System.out.println("Missed GeneBank " + prediction.getKey() + "/" + taxon);
+					} else {
+						System.out.println("Found GeneBank " + prediction.getKey() + "/" + taxon);
+					}
+				}
+			}
+
+			for (String taxon : fp) {
+				System.out.println("Potential FP " + prediction.getKey() + "/" + taxon);
+			}
 		}
+
+		/*
+		 * for (Map<String, Set<String>>[] sets : getFolds(gt)) { Map<String,
+		 * Set<String>> trainingSet = sets[0]; Map<String, Set<String>> testingSet =
+		 * sets[1];
+		 * 
+		 * train(trainingSet, dictFileName, "/home/antonio/Documents/UoM/model");
+		 * CharacterizationEvaluation.evaluate(testingSet, test(testingSet,
+		 * dictFileName, "/home/antonio/Documents/UoM/model/model.jar")); }
+		 */
 	}
 }

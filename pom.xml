@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>readbiomed</groupId>
-	<artifactId>readbiomed-ncbi</artifactId>
+	<artifactId>readbiomed-pathogen-annotator</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
 	<properties>
@@ -66,6 +66,16 @@
 			<groupId>org.cleartk</groupId>
 			<artifactId>cleartk-ml-libsvm</artifactId>
 			<version>${cleartk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>uima-bionlp-tools</groupId>
+			<artifactId>uima-bionlp-tools</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>readbiomed</groupId>
+			<artifactId>readbiomed-bmip-ncbi-dataset</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>
