@@ -34,14 +34,15 @@ public class Utils {
 
 	public static boolean findPartialMatchItem_class(List<String> searchItemsList, String stringToSearch_class) {
 		for (String searchItem : searchItemsList) {
-			if (stringToSearch_class.startsWith(searchItem + " ")
-					|| stringToSearch_class.contains(" " + searchItem + " ")
-					|| stringToSearch_class.endsWith(" " + searchItem) || stringToSearch_class.equals(searchItem)) {
+			//if (stringToSearch_class.startsWith(searchItem + " ")
+			//		|| stringToSearch_class.contains(" " + searchItem + " ")
+			//		|| stringToSearch_class.endsWith(" " + searchItem) || stringToSearch_class.equals(searchItem)) {
 				if (stringToSearch_class.equals(searchItem)) {
 					numberOfExactMatches++;
+					return true;
 				}
-				return true;
-			}
+			//	return true;
+			//}
 		}
 
 		return false;
@@ -58,13 +59,14 @@ public class Utils {
 
 			for (int j = 0; j < searchItemsList.size(); j++) {
 				String searchItem = searchItemsList.get(j);
-				if (searchItem_axiom.startsWith(searchItem + " ") || searchItem_axiom.contains(" " + searchItem + " ")
-						|| searchItem_axiom.endsWith(" " + searchItem) || searchItem_axiom.equals(searchItem)) {
+				//if (searchItem_axiom.startsWith(searchItem + " ") || searchItem_axiom.contains(" " + searchItem + " ")
+				//		|| searchItem_axiom.endsWith(" " + searchItem) || searchItem_axiom.equals(searchItem)) {
 					if (searchItem_axiom.equals(searchItem)) {
 						numberOfExactMatches++;
+						return true;
 					}
-					return true;
-				}
+				//	return true;
+				//}
 			}
 
 		}

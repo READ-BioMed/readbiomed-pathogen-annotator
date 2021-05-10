@@ -7,20 +7,39 @@
 	<groupId>readbiomed</groupId>
 	<artifactId>readbiomed-pathogen-annotator</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>11</source>
-                    <target>11</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<!--<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>11</source>
+					<target>11</target>
+				</configuration>
+			</plugin>-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<!-- annotationProcessorPaths requires maven-compiler-plugin version 
+					3.5 or higher 
+				<version>${maven-compiler-plugin-version}</version>-->
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>info.picocli</groupId>
+							<artifactId>picocli-codegen</artifactId>
+							<version>4.6.1</version>
+						</path>
+					</annotationProcessorPaths>
+					<compilerArgs>
+						<arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
-    <properties>
+	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<cleartk.version>2.0.0</cleartk.version>
@@ -97,24 +116,4 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
-
-
-	<plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-compiler-plugin</artifactId>
-		<!-- annotationProcessorPaths requires maven-compiler-plugin version 3.5 or higher -->
-		<version>${maven-compiler-plugin-version}</version>
-		<configuration>
-			<annotationProcessorPaths>
-				<path>
-					<groupId>info.picocli</groupId>
-					<artifactId>picocli-codegen</artifactId>
-					<version>4.6.1</version>
-				</path>
-			</annotationProcessorPaths>
-			<compilerArgs>
-				<arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
-			</compilerArgs>
-		</configuration>
-	</plugin>
 </project>
