@@ -2,6 +2,8 @@ package readbiomed.annotators.dictionary.utils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +72,6 @@ public class Utils {
 	}
 
 	public static List<String> findUnfoundSearchItems(List<String> searchItemsList, List<OwlClass> owlClassesResuts) {
-
 		List<String> unFoundItems = new ArrayList<>(searchItemsList);
 
 		for (int i = 0; i < searchItemsList.size(); i++) {
@@ -101,8 +102,7 @@ public class Utils {
 	}
 
 	public static void addStopWordAxiom(OwlClass owlclass) throws FileNotFoundException, IOException {
-		List<String> stopWords = StopWordsFileReader.read(InputParameters.StopWordsFileName);
-		for (String stopWord : stopWords) {
+		for (String stopWord : Files.readAllLines(Paths.get(InputParameters.StopWordsFileName))) {
 			if (owlclass.getCanonical().endsWith(" " + stopWord)) {
 				String newVariant = StringUtils.substringBefore(owlclass.getCanonical(), " " + stopWord);
 				if (!owlclass.getVariants().contains(newVariant))

@@ -25,7 +25,7 @@ public class NCBIDictionaryBuilder {
 		InputParameters.StopWordsFileName = folder + "/" + InputParameters.StopWordsFileName;
 		InputParameters.NotFoundItemsFileName = folder + "/" + InputParameters.NotFoundItemsFileName;
 
-		List<String> searchItemsList = CSVFileReader.read(InputParameters.CSVFileName);
+		List<String> searchItemsList = Files.readAllLines(Paths.get(InputParameters.CSVFileName));
 
 		List<OwlClass> owlClassesResults = new ArrayList<>();
 
@@ -91,7 +91,8 @@ public class NCBIDictionaryBuilder {
 									"</owl:annotatedTarget>"));
 						}
 						////////////// Axiom by Stop Words//////////////
-						Utils.addStopWordAxiom(owlclass);
+						//// Testing no stopword removal
+						////Utils.addStopWordAxiom(owlclass);
 
 						owlClassesResults.add(owlclass);
 					}
@@ -108,13 +109,14 @@ public class NCBIDictionaryBuilder {
 
 		//////////////////////// Find All level subclasses in Owl
 		//////////////////////// file///////////////////////////////
-		List<String> searchItemsList_TaxonIDs_CurrentLevel = null;
-		if (InputParameters.searchMode == SearchMode.BY_LABEL)
-			searchItemsList_TaxonIDs_CurrentLevel = ConvertLabelsToTaxonIDs.convert(searchItemsList);
-		else if (InputParameters.searchMode == SearchMode.BY_TAXONID)
-			searchItemsList_TaxonIDs_CurrentLevel = new ArrayList<String>(searchItemsList);
+		//// Testing not collecting children
+		////List<String> searchItemsList_TaxonIDs_CurrentLevel = null;
+		////if (InputParameters.searchMode == SearchMode.BY_LABEL)
+		////	searchItemsList_TaxonIDs_CurrentLevel = ConvertLabelsToTaxonIDs.convert(searchItemsList);
+		////else if (InputParameters.searchMode == SearchMode.BY_TAXONID)
+		////	searchItemsList_TaxonIDs_CurrentLevel = new ArrayList<String>(searchItemsList);
 
-		FindAllLevelSubclasses.traverse(searchItemsList_TaxonIDs_CurrentLevel, owlClassesResults);
+		////FindAllLevelSubclasses.traverse(searchItemsList_TaxonIDs_CurrentLevel, owlClassesResults);
 
 		// Writing ConceptMapper Dictionary
 		XMLFileWriter.XMLWrite(InputParameters.XMLFileName, owlClassesResults, unFoundSearchItems);
