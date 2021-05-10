@@ -3,9 +3,10 @@ package readbiomed.annotators.dictionary.pathogens.build;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -119,11 +120,6 @@ public class NCBIDictionaryBuilder {
 		XMLFileWriter.XMLWrite(InputParameters.XMLFileName, owlClassesResults, unFoundSearchItems);
 
 		// Write the items not found, which could be used with MetaMap
-		try (PrintWriter p = new PrintWriter(new FileWriter(InputParameters.NotFoundItemsFileName))) {
-			for (String s : unFoundSearchItems) {
-				p.println(s);
-			}
-		}
+		Files.write(Paths.get(InputParameters.NotFoundItemsFileName), unFoundSearchItems, Charset.defaultCharset());
 	}
-
 }

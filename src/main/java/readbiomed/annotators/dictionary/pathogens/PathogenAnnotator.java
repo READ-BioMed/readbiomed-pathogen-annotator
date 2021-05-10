@@ -305,6 +305,9 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 						ids.add(getId(e.getDictCanon()));
 					}
 
+					System.out.println(ViewUriUtil.getURI(jCas).toString());
+					System.out.println(jCas.getDocumentText());
+					
 					jCas.reset();
 				}
 			}
@@ -351,7 +354,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		Map<String, Set<String>> gt = CharacterizationEvaluation.getGroundTruth(
 				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv");
 
-		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
+		//String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
 		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml";
 
 		Map<String, DocumentEntry> documentMap = BuildDataset
