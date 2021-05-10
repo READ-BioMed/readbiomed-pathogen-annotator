@@ -305,8 +305,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 						ids.add(getId(e.getDictCanon()));
 					}
 
-					System.out.println(ViewUriUtil.getURI(jCas).toString());
-					System.out.println(jCas.getDocumentText());
+					//System.out.println(ViewUriUtil.getURI(jCas).toString());
+					//System.out.println(jCas.getDocumentText());
 					
 					jCas.reset();
 				}
@@ -315,6 +315,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 			// Let's start with only one file for testing, remove when happy
 			break;
 		}
+		
+		ae.collectionProcessComplete();
 
 		return prediction;
 	}
@@ -355,11 +357,12 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv");
 
 		//String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
-		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml";
+		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml.001";
 
-		Map<String, DocumentEntry> documentMap = BuildDataset
-				.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
-		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
+		//Map<String, DocumentEntry> documentMap = BuildDataset
+		//		.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+	    CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
+	    /*
 		Map<String, Set<String>> predictions = annotateNCBISet(gt, dictFileName,
 				"/home/antonio/Documents/UoM/documents/PubMed");
 
@@ -394,7 +397,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 			for (String taxon : fp) {
 				System.out.println("Potential FP " + prediction.getKey() + "/" + taxon);
 			}
-		}
+		}*/
 
 		/*
 		 * for (Map<String, Set<String>>[] sets : getFolds(gt)) { Map<String,

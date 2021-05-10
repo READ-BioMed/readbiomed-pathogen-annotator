@@ -109,14 +109,13 @@ public class NCBIDictionaryBuilder {
 
 		//////////////////////// Find All level subclasses in Owl
 		//////////////////////// file///////////////////////////////
-		//// Testing not collecting children
-		////List<String> searchItemsList_TaxonIDs_CurrentLevel = null;
-		////if (InputParameters.searchMode == SearchMode.BY_LABEL)
-		////	searchItemsList_TaxonIDs_CurrentLevel = ConvertLabelsToTaxonIDs.convert(searchItemsList);
-		////else if (InputParameters.searchMode == SearchMode.BY_TAXONID)
-		////	searchItemsList_TaxonIDs_CurrentLevel = new ArrayList<String>(searchItemsList);
+		List<String> searchItemsList_TaxonIDs_CurrentLevel = null;
+		if (InputParameters.searchMode == SearchMode.BY_LABEL)
+			searchItemsList_TaxonIDs_CurrentLevel = ConvertLabelsToTaxonIDs.convert(searchItemsList);
+		else if (InputParameters.searchMode == SearchMode.BY_TAXONID)
+			searchItemsList_TaxonIDs_CurrentLevel = new ArrayList<String>(searchItemsList);
 
-		////FindAllLevelSubclasses.traverse(searchItemsList_TaxonIDs_CurrentLevel, owlClassesResults);
+		FindAllLevelSubclasses.traverse(searchItemsList_TaxonIDs_CurrentLevel, owlClassesResults);
 
 		// Writing ConceptMapper Dictionary
 		XMLFileWriter.XMLWrite(InputParameters.XMLFileName, owlClassesResults, unFoundSearchItems);
