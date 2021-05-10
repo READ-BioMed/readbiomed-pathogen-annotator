@@ -45,13 +45,6 @@
 		<cleartk.version>2.0.0</cleartk.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>bionlp-sourceforge</id>
-			<url>http://svn.code.sf.net/p/bionlp/code/repo/</url>
-		</repository>
-	</repositories>
-
 	<dependencies>
 
 		<dependency>
@@ -94,11 +87,6 @@
 			<groupId>org.cleartk</groupId>
 			<artifactId>cleartk-corpus</artifactId>
 			<version>${cleartk.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.ucdenver.ccp</groupId>
-			<artifactId>ccp-nlp-wrapper-conceptmapper</artifactId>
-			<version>3.3.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cleartk</groupId>
