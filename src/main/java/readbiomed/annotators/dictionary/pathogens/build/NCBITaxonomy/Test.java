@@ -1,4 +1,4 @@
-package readbiomed.annotators.dictionary.pathogens.build;
+package readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy;
 
 import java.io.BufferedReader;
 import java.io.File;

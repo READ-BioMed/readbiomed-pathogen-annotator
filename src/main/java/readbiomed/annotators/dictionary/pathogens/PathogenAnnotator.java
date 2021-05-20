@@ -14,6 +14,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -46,11 +47,10 @@ import org.cleartk.util.ViewUriUtil;
 
 import com.ibm.au.research.nlp.ingestion.uima.reader.MedlineReader;
 
-import readbiomed.annotators.dictionary.utils.CharacterizationEvaluation;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
-import readbiomed.bmip.dataset.BuildDataset;
-import readbiomed.bmip.dataset.DocumentEntry;
+import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
+import readbiomed.bmip.dataset.NCBITaxonomy.DocumentEntry;
 import uima.tt.TokenAnnotation;
 
 public class PathogenAnnotator extends CleartkAnnotator<String> {
@@ -74,6 +74,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		return o;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void initialize(UimaContext context) throws ResourceInitializationException {
 		super.initialize(context);
 		try {
@@ -273,8 +274,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	 * @throws Exception
 	 * 
 	 */
-	public static Map<String, Set<String>> annotateNCBISet(Map<String, Set<String>> gt, String dictURI,
-			String folderName) throws Exception {
+	public static Map<String, Set<String>> annotateNCBISet(String dictURI, String folderName) throws Exception {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(ConceptMapperFactory.create(dictURI));
@@ -305,9 +305,9 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 						ids.add(getId(e.getDictCanon()));
 					}
 
-					//System.out.println(ViewUriUtil.getURI(jCas).toString());
-					//System.out.println(jCas.getDocumentText());
-					
+					// System.out.println(ViewUriUtil.getURI(jCas).toString());
+					// System.out.println(jCas.getDocumentText());
+
 					jCas.reset();
 				}
 			}
@@ -315,12 +315,13 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 			// Let's start with only one file for testing, remove when happy
 			break;
 		}
-		
+
 		ae.collectionProcessComplete();
 
 		return prediction;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static List<Map<String, Set<String>>[]> getFolds(Map<String, Set<String>> gt) {
 		int foldsNumber = 10;
 
@@ -353,17 +354,62 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	}
 
 	public static void main(String[] argc) throws Exception {
-		Map<String, Set<String>> gt = CharacterizationEvaluation.getGroundTruth(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv");
+		// Map<String, Set<String>> gt = CharacterizationEvaluation.getGroundTruth(
+		// "/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv");
 
-		//String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
+		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
 		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml.001";
 
-		//Map<String, DocumentEntry> documentMap = BuildDataset
-		//		.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
-	    CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
-	    /*
-		Map<String, Set<String>> predictions = annotateNCBISet(gt, dictFileName,
+		Map<String, String> rootTaxonomyMapping = BuildDataset
+				.readRootTaxonomyMapping("/home/antonio/Documents/UoM/pathogens-ncbi");
+
+		System.out.println("Unique tanonomy entries: " + rootTaxonomyMapping.size());
+
+		Map<String, DocumentEntry> documentMap = BuildDataset
+				.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+
+		System.out.println("Unique documents: " + documentMap.size());
+
+		int meshCount = 0;
+		int geneBankCount = 0;
+
+		Map<String, Integer> meshTaxonomy = new HashMap<>();
+		Map<String, Integer> geneBankTaxonomy = new HashMap<>();
+
+		for (Map.Entry<String, DocumentEntry> entry : documentMap.entrySet()) {
+			if (entry.getValue().getMeSHTaxon().size() > 0)
+				meshCount++;
+
+			entry.getValue().getMeSHTaxon().stream().forEach(e -> meshTaxonomy.merge(e, 1, Integer::sum));
+
+			if (entry.getValue().getGeneBankTaxon().size() > 0)
+				geneBankCount++;
+
+			entry.getValue().getGeneBankTaxon().stream().forEach(e -> geneBankTaxonomy.merge(e, 1, Integer::sum));
+		}
+
+		System.out.println("Unique MeSH documents: " + meshCount);
+		System.out.println("Unique GeneBank documents: " + geneBankCount);
+
+		System.out.println("Unique MeSH taxonomy count: " + meshTaxonomy.size());
+		System.out.println("Average PMIDs per MeSH taxonomy: "
+				+ meshTaxonomy.values().stream().mapToDouble(Integer::doubleValue).average().orElse(0));
+		System.out.println("Top MeSH entries: " + meshTaxonomy.entrySet().stream()
+				.sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).limit(10)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)));
+
+		System.out.println("Unique GeneBank taxonomy count: " + geneBankTaxonomy.size());
+		System.out.println("Average PMIDs per GeneBank taxonomy: "
+				+ geneBankTaxonomy.values().stream().mapToDouble(Integer::doubleValue).average().orElse(0));
+		System.out.println("Top GeneBank entries: " + geneBankTaxonomy.entrySet().stream()
+				.sorted(Collections.reverseOrder(Map.Entry.comparingByValue())).limit(10)
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)));
+
+		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
+		
+		System.exit(-1);
+
+		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName,
 				"/home/antonio/Documents/UoM/documents/PubMed");
 
 		for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
@@ -372,8 +418,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 
 			Set<String> fp = new HashSet<>(prediction.getValue());
 
-			if (de != null) {
-				// What has not been matched from MeSH?
+			if (de != null) { // What has not been matched from MeSH?
 				for (String taxon : de.getMeSHTaxon()) {
 					fp.remove(taxon);
 					if (!prediction.getValue().contains(taxon)) {
@@ -397,7 +442,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 			for (String taxon : fp) {
 				System.out.println("Potential FP " + prediction.getKey() + "/" + taxon);
 			}
-		}*/
+		}
 
 		/*
 		 * for (Map<String, Set<String>>[] sets : getFolds(gt)) { Map<String,

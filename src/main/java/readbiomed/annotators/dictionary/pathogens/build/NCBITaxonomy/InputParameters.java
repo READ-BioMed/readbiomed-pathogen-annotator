@@ -1,4 +1,4 @@
-package readbiomed.annotators.dictionary.pathogens.build;
+package readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy;
 
 public class InputParameters {
 	public static int searchMode = SearchMode.BY_LABEL;

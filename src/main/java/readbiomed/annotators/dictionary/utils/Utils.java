@@ -9,8 +9,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import readbiomed.annotators.dictionary.pathogens.build.InputParameters;
-import readbiomed.annotators.dictionary.pathogens.build.OwlClass;
+import readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy.InputParameters;
+import readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy.OwlClass;
 
 public class Utils {
 
