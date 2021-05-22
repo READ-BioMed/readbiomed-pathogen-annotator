@@ -407,10 +407,11 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 
 		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
 		
-		System.exit(-1);
 
 		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName,
 				"/home/antonio/Documents/UoM/documents/PubMed");
+
+		System.exit(-1);
 
 		for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
 			DocumentEntry de = documentMap.get(prediction.getKey());
