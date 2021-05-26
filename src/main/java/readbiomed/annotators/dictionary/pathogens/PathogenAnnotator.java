@@ -1,16 +1,11 @@
 package readbiomed.annotators.dictionary.pathogens;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,6 +43,7 @@ import org.cleartk.util.ViewUriUtil;
 import com.ibm.au.research.nlp.ingestion.uima.reader.MedlineReader;
 
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
+import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
 import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
 import readbiomed.bmip.dataset.NCBITaxonomy.DocumentEntry;
@@ -58,29 +54,13 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 
 	private Map<String, Set<String>> gt = null;
 
-	private static String serialize(Serializable o) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		oos.writeObject(o);
-		oos.close();
-		return Base64.getEncoder().encodeToString(baos.toByteArray());
-	}
-
-	private static Object deserialize(String s) throws IOException, ClassNotFoundException {
-		byte[] data = Base64.getDecoder().decode(s);
-		ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
-		Object o = ois.readObject();
-		ois.close();
-		return o;
-	}
-
 	@SuppressWarnings("unchecked")
 	public void initialize(UimaContext context) throws ResourceInitializationException {
 		super.initialize(context);
 		try {
 			if (context.getConfigParameterValue(PARAM_GROUND_TRUTH) != null) {
-				gt = (Map<String, Set<String>>) deserialize(
-						(String) context.getConfigParameterValue(PARAM_GROUND_TRUTH));
+				gt = (Map<String, Set<String>>) Serialization
+						.deserialize((String) context.getConfigParameterValue(PARAM_GROUND_TRUTH));
 			}
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
@@ -170,7 +150,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	public static void train(Map<String, Set<String>> gt, String dictURI, String modelFolderName) throws Exception {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(ConceptMapperFactory.create(dictURI));
-		builder.add(PathogenAnnotator.getWriterDescription(modelFolderName, serialize((Serializable) gt)));
+		builder.add(
+				PathogenAnnotator.getWriterDescription(modelFolderName, Serialization.serialize((Serializable) gt)));
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
@@ -294,26 +275,20 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 
 					String pmid = p.split(ViewUriUtil.getURI(jCas).toString())[1].split("-")[0];
 
-					// Several sections of the citation might be considered
-					Set<String> ids = prediction.get(pmid);
-					if (ids == null) {
-						ids = new HashSet<>();
-						prediction.put(pmid, ids);
-					}
-
-					for (DictTerm e : JCasUtil.select(jCas, DictTerm.class)) {
-						ids.add(getId(e.getDictCanon()));
-					}
-
-					// System.out.println(ViewUriUtil.getURI(jCas).toString());
-					// System.out.println(jCas.getDocumentText());
+					JCasUtil.select(jCas, DictTerm.class)
+							.forEach(
+									e -> prediction
+											.computeIfAbsent(
+													e.getDictCanon()
+															.replaceAll("http://purl.obolibrary.org/obo/NCBITaxon_",
+																	"pathogen-")
+															.toLowerCase(),
+													o -> new HashSet<String>())
+											.add(pmid));
 
 					jCas.reset();
 				}
 			}
-
-			// Let's start with only one file for testing, remove when happy
-			break;
 		}
 
 		ae.collectionProcessComplete();
@@ -354,10 +329,6 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	}
 
 	public static void main(String[] argc) throws Exception {
-		// Map<String, Set<String>> gt = CharacterizationEvaluation.getGroundTruth(
-		// "/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv");
-
-		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
 		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml.001";
 
 		Map<String, String> rootTaxonomyMapping = BuildDataset
@@ -406,10 +377,39 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2, LinkedHashMap::new)));
 
 		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
-		
 
 		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName,
 				"/home/antonio/Documents/UoM/documents/PubMed");
+
+		Map<String, Set<String>> gt = BuildDataset.readPathogenEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+
+		// Compare GT
+		for (Map.Entry<String, Set<String>> entry : gt.entrySet()) {
+			// System.out.println(entry.getKey() + "|" + predictions.get(entry.getKey()));
+			if (entry.getValue().size() > 0) {
+				long common = entry.getValue().stream()
+						.filter(predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>())::contains).count();
+
+				Set<String> fp = predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).stream()
+						.filter(e -> !entry.getValue().contains(e)).collect(Collectors.toSet());
+
+				Set<String> fn = entry.getValue().stream()
+						.filter(e -> !predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).contains(e))
+						.collect(Collectors.toSet());
+
+				System.out.println(entry.getKey() + "|" + common + "|" + entry.getValue().size() + "|"
+						+ predictions.get(entry.getKey()).size());
+
+				double recall = common / (double) (common + fn.size());
+				double precision = common / (double) (common + fp.size());
+				double f1 = (2 * precision * recall) / (precision + recall);
+
+				System.out.println(entry.getKey() + "|" + precision + "|" + recall + "|" + f1);
+
+				System.out.println("FP:" + fp);
+				System.out.println("FN:" + fn);
+			}
+		}
 
 		System.exit(-1);
 

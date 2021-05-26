@@ -16,6 +16,8 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.InvalidXMLException;
 import org.xml.sax.SAXException;
 
+import edu.ucdenver.ccp.nlp.wrapper.conceptmapper.stemmer.ConceptMapperStemmerFactory;
+
 public class ConceptMapperFactory {
 
 	public static AnalysisEngineDescription create(String dictionaryFileName)
@@ -25,8 +27,8 @@ public class ConceptMapperFactory {
 
 		AnalysisEngineDescription offsetTokenizer = AnalysisEngineFactory.createEngineDescription(OffsetTokenizer.class,
 				OffsetTokenizer.PARAM_CASE_MATCH, "ignoreall", OffsetTokenizer.PARAM_TOKEN_DELIM,
-				"/-*&@(){}|[]<>\\'`\":;,$%+.?!"); // , OffsetTokenizer.PARAM_STEMMER_CLASS,
-		// ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
+				"/-*&@(){}|[]<>\\'`\":;,$%+.?!", OffsetTokenizer.PARAM_STEMMER_CLASS,
+				ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
 
 		File tmpTokenizerDescription = File.createTempFile("preffix_", "_suffix");
 		tmpTokenizerDescription.deleteOnExit();
@@ -44,15 +46,15 @@ public class ConceptMapperFactory {
 				"uima.tcas.DocumentAnnotation", ConceptMapper.PARAM_SEARCHSTRATEGY, "ContiguousMatch",
 				ConceptMapper.PARAM_FINDALLMATCHES, false, ConceptMapper.PARAM_ORDERINDEPENDENTLOOKUP, false,
 				OffsetTokenizer.PARAM_CASE_MATCH, "ignoreall", OffsetTokenizer.PARAM_TOKEN_DELIM,
-				"/-*&@(){}|[]<>\\'`\":;,$%+.?!"); // , OffsetTokenizer.PARAM_STEMMER_CLASS,
-		// ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
+				"/-*&@(){}|[]<>\\'`\":;,$%+.?!", OffsetTokenizer.PARAM_STEMMER_CLASS,
+				ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
 
 		createDependencyAndBind(conceptMapper, ConceptMapper.PARAM_DICT_FILE, DictionaryResource_impl.class,
 				dictionaryFileName);
 
 		builder.add(offsetTokenizer);
 		builder.add(conceptMapper);
-		
+
 		return builder.createAggregateDescription();
 	}
 }

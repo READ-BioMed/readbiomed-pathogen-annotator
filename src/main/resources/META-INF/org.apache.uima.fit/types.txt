@@ -1,2 +1,3 @@
 classpath*:types/*.xml
 classpath*:desc/types/*.xml
+classpath*:readbiomed/document/**/*.xml

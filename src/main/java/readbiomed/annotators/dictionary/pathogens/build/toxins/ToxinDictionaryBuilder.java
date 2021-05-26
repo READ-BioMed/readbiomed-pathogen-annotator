@@ -10,13 +10,13 @@ import readbiomed.bmip.dataset.toxins.ToxinDocuments;
 public class ToxinDictionaryBuilder {
 	public static void dictionaryBuilder(PrintWriter p) {
 		for (String[] toxin : ToxinDocuments.toxins) {
-			p.print("<token ");
-			p.print("id=\"toxin-" + toxin[0] + "\" ");
-			p.print("canonical=\"" + toxin[0] + "\"");
-			p.println(">");
-			p.print("    <variant ");
-			p.print("base=\"" + toxin[0] + "\"");
-			p.println("/>");
+			p.println("<token id=\"toxin-" + toxin[1].toLowerCase() + "\" canonical=\"" + toxin[0] + "\">");
+			p.println("    <variant base=\"" + toxin[0] + "\"/>");
+
+			if (!toxin[0].equals(toxin[1])) {
+				p.println("    <variant base=\"" + toxin[1].toLowerCase() + "\"/>");
+			}
+
 			p.println("</token>");
 		}
 	}

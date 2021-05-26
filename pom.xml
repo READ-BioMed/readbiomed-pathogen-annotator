@@ -30,14 +30,59 @@
 					</compilerArgs>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.uima</groupId>
+				<artifactId>jcasgen-maven-plugin</artifactId>
+				<version>2.10.0</version>  <!-- change this to the latest version -->
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<typeSystemIncludes>
+								<typeSystemInclude>src/main/resources/readbiomed/document/TypeSystem.xml</typeSystemInclude>
+							</typeSystemIncludes>
+							<typeSystemExcludes>
+							</typeSystemExcludes>
+							<limitToProject>false</limitToProject>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.8</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/java/</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
-
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<cleartk.version>2.0.0</cleartk.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>bionlp-sourceforge</id>
+			<url>http://svn.code.sf.net/p/bionlp/code/repo/</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -94,6 +139,11 @@
 			<groupId>readbiomed</groupId>
 			<artifactId>readbiomed-bmip-ncbi-dataset</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>edu.ucdenver.ccp</groupId>
+			<artifactId>nlp-pipelines-conceptmapper</artifactId>
+			<version>0.5.4</version>
 		</dependency>
 	</dependencies>
 </project>
