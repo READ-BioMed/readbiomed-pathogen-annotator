@@ -3,42 +3,57 @@ package readbiomed.annotators.dictionary.pathogens.build.PrPSc;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
+
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 
 import readbiomed.bmip.dataset.PrPSc.PrPScDocuments;
 
 public class PrPScDictionaryBuilder {
-	public static void dictionaryBuilder(PrintWriter p) {
-		p.println("<token id=\"prpsc-prion\" canonical=\"prion\">");
-		p.println("    <variant base=\"prion\"/>");
-		p.println("</token>");
-		
-		p.println("<token id=\"prpsc-prpsc\" canonical=\"PrPSc\">");
-		p.println("    <variant base=\"PrPSc\"/>");
-		p.println("</token>");
-		
-		for (String[] s : PrPScDocuments.species) {
-			p.print("<token ");
-			p.print("id=\"prpsc-" + s[0] + "\" ");
-			p.print("canonical=\"" + s[0] + "\"");
-			p.println(">");
-			p.print("    <variant ");
-			p.print("base=\"" + s[0] + "\"");
-			p.println("/>");
-			p.println("</token>");
-		}
-	}
-
-	public static void main(String[] argc) throws IOException {
+	public static void main(String[] argc) throws IOException, XMLStreamException {
 		String folderName = argc[0];
 
-		try (PrintWriter p = new PrintWriter(new FileWriter(new File(folderName, "prpsc-dict.xml")))) {
-			p.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-			p.println("<synonym>");
+		try (FileWriter w = new FileWriter(new File(folderName, "prpsc-dict.xml"));) {
+			XMLOutputFactory xMLOutputFactory = XMLOutputFactory.newInstance();
+			XMLStreamWriter xmlWriter = new IndentingXMLStreamWriter(xMLOutputFactory.createXMLStreamWriter(w));
 
-			dictionaryBuilder(p);
+			xmlWriter.writeStartDocument();
+			xmlWriter.writeStartElement("synonym");
 
-			p.println("</synonym>");
+			xmlWriter.writeStartElement("token");
+			xmlWriter.writeAttribute("id", "prpsc-prion");
+			xmlWriter.writeAttribute("canonical", "prion");
+			xmlWriter.writeStartElement("variant");
+			xmlWriter.writeAttribute("base", "prion");
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndElement();
+
+			xmlWriter.writeStartElement("token");
+			xmlWriter.writeAttribute("id", "prpsc-prpsc");
+			xmlWriter.writeAttribute("canonical", "PrPSc");
+			xmlWriter.writeStartElement("variant");
+			xmlWriter.writeAttribute("base", "PrPSc");
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndElement();
+
+			for (String[] s : PrPScDocuments.species) {
+				xmlWriter.writeStartElement("token");
+				xmlWriter.writeAttribute("id", "prpsc-" + s[0]);
+				xmlWriter.writeAttribute("canonical", s[0]);
+				xmlWriter.writeStartElement("variant");
+				xmlWriter.writeAttribute("base", s[0]);
+				xmlWriter.writeEndElement();
+				xmlWriter.writeEndElement();
+			}
+
+			// End Synonym
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndDocument();
+			xmlWriter.flush();
+			xmlWriter.close();
 		}
 	}
 }

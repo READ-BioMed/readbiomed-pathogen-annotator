@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -40,13 +39,12 @@ import org.cleartk.ml.jar.Train;
 import org.cleartk.ml.libsvm.LibSvmStringOutcomeDataWriter;
 import org.cleartk.util.ViewUriUtil;
 
-import com.ibm.au.research.nlp.ingestion.uima.reader.MedlineReader;
-
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
 import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
 import readbiomed.bmip.dataset.NCBITaxonomy.DocumentEntry;
+import readbiomed.readers.medline.MedlineReader;
 import uima.tt.TokenAnnotation;
 
 public class PathogenAnnotator extends CleartkAnnotator<String> {
@@ -243,8 +241,6 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		return prediction;
 	}
 
-	private static final Pattern p = Pattern.compile("/");
-
 	/**
 	 * Read MEDLINE citations from documents collected using the NCBI web services
 	 * 
@@ -273,21 +269,17 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 					cr.getNext(jCas);
 					ae.process(jCas);
 
-					String pmid = p.split(ViewUriUtil.getURI(jCas).toString())[1].split("-")[0];
+					String pmid = ViewUriUtil.getURI(jCas).toString();
 
 					JCasUtil.select(jCas, DictTerm.class)
-							.forEach(
-									e -> prediction
-											.computeIfAbsent(
-													e.getDictCanon()
-															.replaceAll("http://purl.obolibrary.org/obo/NCBITaxon_",
-																	"pathogen-")
-															.toLowerCase(),
-													o -> new HashSet<String>())
-											.add(pmid));
+							.forEach(e -> prediction
+									.computeIfAbsent(e.getDictCanon().replaceAll("ncbi-", "pathogen-").toLowerCase(),
+											o -> new HashSet<String>())
+									.add(pmid));
 
 					jCas.reset();
 				}
+				// break;
 			}
 		}
 
@@ -329,7 +321,7 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 	}
 
 	public static void main(String[] argc) throws Exception {
-		String dictFileName = "file:/home/antonio/Documents/UoM/cmDict-NCBI_TAXON.xml.001";
+		String dictFileName = "file:/home/antonio/Documents/UoM/ncbi-dict.xml";
 
 		Map<String, String> rootTaxonomyMapping = BuildDataset
 				.readRootTaxonomyMapping("/home/antonio/Documents/UoM/pathogens-ncbi");
@@ -379,7 +371,8 @@ public class PathogenAnnotator extends CleartkAnnotator<String> {
 		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
 
 		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName,
-				"/home/antonio/Documents/UoM/documents/PubMed");
+				//"/home/antonio/Downloads");
+		 "/home/antonio/Documents/UoM/documents/PubMed");
 
 		Map<String, Set<String>> gt = BuildDataset.readPathogenEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
 

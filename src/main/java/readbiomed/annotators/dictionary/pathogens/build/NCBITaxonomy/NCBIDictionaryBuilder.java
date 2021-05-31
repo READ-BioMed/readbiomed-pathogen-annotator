@@ -1,126 +1,176 @@
 package readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.lang3.StringUtils;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
-import readbiomed.annotators.dictionary.utils.Utils;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
 
-public class NCBIDictionaryBuilder {
+import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 
-	public static void main(String[] args) throws IOException {
-		String folder = args[0];
+public class NCBIDictionaryBuilder extends DefaultHandler {
 
-		InputParameters.OWLFileName = folder + "/" + InputParameters.OWLFileName;
-		InputParameters.XMLFileName = folder + "/" + InputParameters.XMLFileName;
-		InputParameters.CSVFileName = folder + "/" + InputParameters.CSVFileName;
-		InputParameters.StopWordsFileName = folder + "/" + InputParameters.StopWordsFileName;
-		InputParameters.NotFoundItemsFileName = folder + "/" + InputParameters.NotFoundItemsFileName;
+	private enum Tag {
+		Class, Axiom
+	}
 
-		List<String> searchItemsList = Files.readAllLines(Paths.get(InputParameters.CSVFileName));
+	private enum TermTag {
+		Canonical, Variant
+	}
 
-		List<OwlClass> owlClassesResults = new ArrayList<>();
+	private Tag tag = null;
+	private TermTag termTag = null;
+	private String currentId = null;
+	private StringBuilder currentTerm = new StringBuilder();
 
-		try (BufferedReader b = new BufferedReader(new FileReader(new File(InputParameters.OWLFileName)))) {
-			String line;
-			while ((line = b.readLine()) != null) {
-				// Class
-				if (line.contains("<owl:Class")) {
-					String owlClassString = line + "\n";
-					String classLine;
-					while ((classLine = b.readLine()) != null) {
-						owlClassString += classLine + "\n";
-						if (classLine.endsWith("</owl:Class>")) {
-							break;
-						}
-					} // Raw String of owl class is built
+	private Map<String, NCBIEntry> map = new HashMap<>();
 
-					// Axioms
-					List<String> rawAxiomStringsforCurrentClass = new ArrayList<>();
+	List<String> searchItemsList = null;
 
-					while ((line = b.readLine()) != null) {
-						if (line.contains("<owl:Axiom>")) {
-							String axiomString = line + "\n";
-							String axiomLine;
-							while ((axiomLine = b.readLine()) != null) {
-								axiomString += axiomLine + "\n";
-								if (axiomLine.endsWith("</owl:Axiom>")) {
-									rawAxiomStringsforCurrentClass.add(axiomString);
-									break;
-								}
-							}
-						} else
-							break;
-					}
+	public NCBIDictionaryBuilder() throws IOException {
+	}
 
-					// Checking whether the owl class is our search item or not (by checking class
-					// name, axioms names and subclass field)
-					String stringToSearch_class = "";
+	private static String removeOBOURL(String string) {
+		return string.substring(41);
+	}
 
-					if (InputParameters.searchMode == SearchMode.BY_LABEL) {
-						stringToSearch_class = StringUtils.substringBetween(owlClassString,
-								"<rdfs:label rdf:datatype=\"http://www.w3.org/2001/XMLSchema#string\">",
-								"</rdfs:label>");
-					} else if (InputParameters.searchMode == SearchMode.BY_TAXONID) {
-						stringToSearch_class = StringUtils.substringBetween(owlClassString, "rdf:about=\"", "\"");
-					}
+	@Override
+	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+		if (qName.equalsIgnoreCase("owl:Class")) {
+			tag = Tag.Class;
+			currentId = removeOBOURL(attributes.getValue("rdf:about"));
+			map.put(currentId, new NCBIEntry(currentId));
+		} else if (tag == Tag.Class && qName.equalsIgnoreCase("rdfs:subClassOf")) {
+			map.get(currentId).getParents().add(removeOBOURL(attributes.getValue("rdf:resource")));
+		} else if (tag == Tag.Class && qName.equalsIgnoreCase("rdfs:label")) {
+			termTag = TermTag.Canonical;
+		} else if (qName.equalsIgnoreCase("owl:Axiom")) {
+			tag = Tag.Axiom;
+		} else if (tag == Tag.Axiom && qName.equalsIgnoreCase("owl:annotatedSource")) {
+			currentId = removeOBOURL(attributes.getValue("rdf:resource"));
+		} else if (tag == Tag.Axiom && qName.equalsIgnoreCase("owl:annotatedTarget")) {
+			termTag = TermTag.Variant;
+		}
+	}
 
-					// check cloned_searchItemsList null or not
-					if (Utils.findPartialMatchItem_class(searchItemsList, stringToSearch_class)
-							|| Utils.findPartialMatchItem_axiom(searchItemsList, rawAxiomStringsforCurrentClass)) {
-						OwlClass owlclass = new OwlClass();
-						owlclass.setRawOwlClassString(owlClassString);
-						owlclass.setId(StringUtils.substringBetween(owlClassString, "rdf:about=\"", "\""));
-						owlclass.setCanonical(StringUtils.substringBetween(owlClassString,
-								"<rdfs:label rdf:datatype=\"http://www.w3.org/2001/XMLSchema#string\">",
-								"</rdfs:label>"));
+	@Override
+	public void characters(char ch[], int start, int length) throws SAXException {
+		if (termTag != null) {
+			currentTerm.append(new String(ch, start, length));
+		}
+	}
 
-						// Add Axiom Information to Owl Class Object
-						for (String axiomString : rawAxiomStringsforCurrentClass) {
-							owlclass.getRawAxiomStrings().add(axiomString);
-							owlclass.getVariants().add(StringUtils.substringBetween(axiomString,
-									"<owl:annotatedTarget rdf:datatype=\"http://www.w3.org/2001/XMLSchema#string\">",
-									"</owl:annotatedTarget>"));
-						}
-						////////////// Axiom by Stop Words//////////////
-						//// Testing no stopword removal
-						////Utils.addStopWordAxiom(owlclass);
+	@Override
+	public void endElement(String uri, String localName, String qName) throws SAXException {
+		if (qName.equalsIgnoreCase("owl:Class") || qName.equalsIgnoreCase("owl:Axiom")) {
+			tag = null;
+			currentId = null;
+		} else if (termTag == TermTag.Canonical && qName.equalsIgnoreCase("rdfs:label")) {
+			map.get(currentId).setCanonical(currentTerm.toString());
+			termTag = null;
+			currentTerm.setLength(0);
+		} else if (termTag == TermTag.Variant && qName.equalsIgnoreCase("owl:annotatedTarget")) {
+			map.get(currentId).getSynonyms().add(currentTerm.toString());
+			termTag = null;
+			currentTerm.setLength(0);
+		}
+	}
 
-						owlClassesResults.add(owlclass);
-					}
-					// Owl class is not our search Item (non of three conditions is satisfied)
+	private void buildTree() {
+		map.entrySet().stream().forEach(e -> {
+			e.getValue().getParents().stream().forEach(c -> {
+				if (map.get(c) != null) {
+					map.get(c).getChildren().add(e.getKey());
+				}
+			});
+		});
+	}
+
+	private void writeDictionaryChildren(NCBIEntry ncbiEntry, XMLStreamWriter xmlWriter) throws XMLStreamException {
+		xmlWriter.writeStartElement("variant");
+		xmlWriter.writeAttribute("base", ncbiEntry.getCanonical());
+		xmlWriter.writeEndElement();
+
+		for (String term : ncbiEntry.getSynonyms()) {
+			// Do not consider terms that are too short
+			if (term.length() > 3) {
+				xmlWriter.writeStartElement("variant");
+				xmlWriter.writeAttribute("base", term);
+				xmlWriter.writeEndElement();
+			}
+		}
+
+		for (String child : ncbiEntry.getChildren()) {
+			writeDictionaryChildren(map.get(child), xmlWriter);
+		}
+	}
+
+	private void writeDictionary(String outputFileName, String termFileName) throws IOException, XMLStreamException {
+		Set<String> searchItemsList = Files.readAllLines(Paths.get(termFileName)).stream().filter(e -> e.length() > 0)
+				.map(e -> e.toLowerCase()).collect(Collectors.toSet());
+
+		try (FileWriter w = new FileWriter(outputFileName)) {
+			XMLOutputFactory xMLOutputFactory = XMLOutputFactory.newInstance();
+			XMLStreamWriter xmlWriter = new IndentingXMLStreamWriter(xMLOutputFactory.createXMLStreamWriter(w));
+
+			xmlWriter.writeStartDocument();
+			xmlWriter.writeStartElement("synonym");
+
+			for (Map.Entry<String, NCBIEntry> entry : map.entrySet()) {
+				if (searchItemsList.contains(entry.getValue().getCanonical().toLowerCase()) || entry.getValue()
+						.getSynonyms().parallelStream().anyMatch(e -> searchItemsList.contains(e.toLowerCase()))) {
+					xmlWriter.writeStartElement("token");
+					xmlWriter.writeAttribute("id", "ncbi-" + entry.getValue().getId());
+					xmlWriter.writeAttribute("canonical", entry.getValue().getCanonical());
+
+					writeDictionaryChildren(entry.getValue(), xmlWriter);
+
+					xmlWriter.writeEndElement();
 				}
 			}
 
+			// End Synonym
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndDocument();
+			xmlWriter.flush();
+			xmlWriter.close();
 		}
+	}
 
-		////////////////// Find Unfound Search Items in Owl File///////////////////
-		List<String> unFoundSearchItems = Utils.findUnfoundSearchItems(searchItemsList, owlClassesResults);
+	public static void main(String[] argc)
+			throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, XMLStreamException {
+		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
+		SAXParser saxParser = saxParserFactory.newSAXParser();
+		NCBIDictionaryBuilder handler = new NCBIDictionaryBuilder();
+		XMLReader reader = saxParser.getXMLReader();
+		reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		saxParser.parse(new GZIPInputStream(new FileInputStream("/home/antonio/Documents/UoM/ncbitaxon.owl.gz"), 65536),
+				handler);
 
-		System.out.println("Number of Exact Matches: " + Utils.numberOfExactMatches);
+		handler.buildTree();
 
-		//////////////////////// Find All level subclasses in Owl
-		//////////////////////// file///////////////////////////////
-		List<String> searchItemsList_TaxonIDs_CurrentLevel = null;
-		if (InputParameters.searchMode == SearchMode.BY_LABEL)
-			searchItemsList_TaxonIDs_CurrentLevel = ConvertLabelsToTaxonIDs.convert(searchItemsList);
-		else if (InputParameters.searchMode == SearchMode.BY_TAXONID)
-			searchItemsList_TaxonIDs_CurrentLevel = new ArrayList<String>(searchItemsList);
+		handler.writeDictionary("/home/antonio/Documents/UoM/ncbi-dict.xml",
+				"/home/antonio/Documents/UoM/ncbi-pathogens.txt");
 
-		FindAllLevelSubclasses.traverse(searchItemsList_TaxonIDs_CurrentLevel, owlClassesResults);
-
-		// Writing ConceptMapper Dictionary
-		XMLFileWriter.XMLWrite(InputParameters.XMLFileName, owlClassesResults, unFoundSearchItems);
-
-		// Write the items not found, which could be used with MetaMap
-		Files.write(Paths.get(InputParameters.NotFoundItemsFileName), unFoundSearchItems, Charset.defaultCharset());
+		System.out.println(handler.map.size());
 	}
 }
