@@ -17,9 +17,8 @@ import org.apache.uima.jcas.JCas;
 import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 
-import com.ibm.au.research.nlp.ingestion.uima.reader.MedlineReader;
-
 import readbiomed.bmip.dataset.toxins.ToxinBuildDataset;
+import readbiomed.readers.medline.MedlineReader;
 
 public class ToxinExperimenter {
 	private static final Pattern p = Pattern.compile("/");
@@ -43,7 +42,7 @@ public class ToxinExperimenter {
 					cr.getNext(jCas);
 					ae.process(jCas);
 
-					String pmid = p.split(ViewUriUtil.getURI(jCas).toString())[1].split("-")[0];
+					String pmid = ViewUriUtil.getURI(jCas).toString();
 
 					//JCasUtil.select(jCas, DictTerm.class).forEach(e -> prediction
 					//		.computeIfAbsent(e.getDictCanon().toLowerCase(), o -> new HashSet<String>()).add(pmid));
