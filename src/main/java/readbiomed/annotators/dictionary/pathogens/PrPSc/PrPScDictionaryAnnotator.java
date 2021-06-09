@@ -34,7 +34,6 @@ public class PrPScDictionaryAnnotator extends JCasAnnotator_ImplBase {
 					n.setMentionType("pathogen");
 					n.addToIndexes(jCas);
 				});
-
 	}
 
 	public static AnalysisEngineDescription getDescription() throws ResourceInitializationException {

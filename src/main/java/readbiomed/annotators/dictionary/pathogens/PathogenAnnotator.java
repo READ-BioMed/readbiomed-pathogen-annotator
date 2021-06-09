@@ -14,14 +14,13 @@ import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 
 public class PathogenAnnotator {
 
-	public static AggregateBuilder getPipeline(String PrPSCDictFileName, String NCBITaxonomyDictFileName)
+	public static AggregateBuilder getPipeline(String dictFileName)
 			throws InvalidXMLException, ResourceInitializationException, IOException, SAXException
 	{
 		AggregateBuilder builder = new AggregateBuilder();
-		builder.add(ConceptMapperFactory.create(PrPSCDictFileName));
-		builder.add(ConceptMapperFactory.create(NCBITaxonomyDictFileName));
-		builder.add(PrPScDictionaryAnnotator.getDescription());
+		builder.add(ConceptMapperFactory.create(dictFileName));
 		builder.add(NCBITaxonomyAnnotator.getDescription());
+		builder.add(PrPScDictionaryAnnotator.getDescription());
 		builder.add(ToxinRegexAnnotator.getDescription());
 		
 		return builder;

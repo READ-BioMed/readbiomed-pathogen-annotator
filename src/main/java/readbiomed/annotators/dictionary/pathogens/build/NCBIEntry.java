@@ -1,4 +1,4 @@
-package readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy;
+package readbiomed.annotators.dictionary.pathogens.build;
 
 import java.util.ArrayList;
 import java.util.HashSet;

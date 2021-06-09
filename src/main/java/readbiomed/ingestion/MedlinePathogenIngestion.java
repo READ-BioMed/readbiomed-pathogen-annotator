@@ -35,12 +35,12 @@ public class MedlinePathogenIngestion implements Runnable {
 
 	public static Map<String, Integer> mapCanonical = Collections.synchronizedMap(new HashMap<>());
 
-	private String PrPSCDictionaryFileName;
-	private String NCBITaxonomyDictionaryFileName;
+	private String dictionaryFileName;
+	private String outputFolderName;
 
-	public MedlinePathogenIngestion(String PrPSCDictionaryFileName, String NCBITaxonomyDictionaryFileName) {
-		this.PrPSCDictionaryFileName = PrPSCDictionaryFileName;
-		this.NCBITaxonomyDictionaryFileName = NCBITaxonomyDictionaryFileName;
+	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName) {
+		this.dictionaryFileName = dictionaryFileName;
+		this.outputFolderName = outputFolderName;
 	}
 
 	@Override
@@ -51,8 +51,9 @@ public class MedlinePathogenIngestion implements Runnable {
 
 			AggregateBuilder builder;
 			try {
-				builder = PathogenAnnotator.getPipeline(PrPSCDictionaryFileName, NCBITaxonomyDictionaryFileName);
-				builder.add(PrintConsumer.getDescription());
+				builder = PathogenAnnotator.getPipeline(dictionaryFileName);
+				builder.add(PrintConsumer
+						.getDescription(new File(outputFolderName, file.getName() + ".txt").getAbsolutePath()));
 				builder.createAggregateDescription();
 
 				SimplePipeline.runPipeline(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()),

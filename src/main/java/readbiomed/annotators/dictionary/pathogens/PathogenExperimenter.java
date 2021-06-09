@@ -28,11 +28,11 @@ import readbiomed.annotators.dictionary.utils.TextFileFilter;
 
 public class PathogenExperimenter {
 
-	private static Map<String, Set<String>> annotate(String PrPScDictFileName, String NCBITaxonomyDictFileName)
+	private static Map<String, Set<String>> annotate(String dictFileName)
 			throws UIMAException, IOException, URISyntaxException, SAXException {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
-		AggregateBuilder builder = PathogenAnnotator.getPipeline(PrPScDictFileName, NCBITaxonomyDictFileName);
+		AggregateBuilder builder = PathogenAnnotator.getPipeline(dictFileName);
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
@@ -63,6 +63,11 @@ public class PathogenExperimenter {
 	private static Map<String, Set<String>> getGT(String fileName) throws IOException {
 		Map<String, Set<String>> gt = new HashMap<>();
 
+		FileUtils.listFiles(new File(
+				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
+				new TextFileFilter(), null).stream()
+				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
+
 		// Read CSV. The first line is skipped
 		Files.lines(Paths.get(fileName)).map(line -> line.split(",")).skip(1).filter(e -> e.length == 5).forEach(e -> {
 			gt.putIfAbsent(e[0], new HashSet<>());
@@ -73,8 +78,7 @@ public class PathogenExperimenter {
 	}
 
 	public static void main(String[] argc) throws UIMAException, IOException, URISyntaxException, SAXException {
-		String PrPScDictFileName = "file:/home/antonio/Documents/UoM/prpsc-dict.xml";
-		String NCBITaxonomyDictFileName = "file:/home/antonio/Documents/UoM/ncbi-dict.xml";
+		String dictFileName = "file:/home/antonio/Documents/UoM/ncbi-dict.xml";
 		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
 
 		Map<String, Set<String>> gt = getGT("/home/antonio/Documents/UoM/manual-annotation-gt.csv");
@@ -82,7 +86,7 @@ public class PathogenExperimenter {
 		System.out.println(gt.size());
 		System.out.println(gt);
 
-		Map<String, Set<String>> predictions = annotate(PrPScDictFileName, NCBITaxonomyDictFileName);
+		Map<String, Set<String>> predictions = annotate(dictFileName);
 
 		double tps = 0.0;
 		double fns = 0.0;
@@ -90,33 +94,30 @@ public class PathogenExperimenter {
 
 		// Compare GT
 		for (Map.Entry<String, Set<String>> entry : gt.entrySet()) {
-			// System.out.println(entry.getKey() + "|" + predictions.get(entry.getKey()));
-			if (entry.getValue().size() > 0) {
-				long common = entry.getValue().stream()
-						.filter(predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>())::contains).count();
+			long common = entry.getValue().stream()
+					.filter(predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>())::contains).count();
 
-				Set<String> fp = predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).stream()
-						.filter(e -> !entry.getValue().contains(e)).collect(Collectors.toSet());
+			Set<String> fp = predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).stream()
+					.filter(e -> !entry.getValue().contains(e)).collect(Collectors.toSet());
 
-				Set<String> fn = entry.getValue().stream()
-						.filter(e -> !predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).contains(e))
-						.collect(Collectors.toSet());
+			Set<String> fn = entry.getValue().stream()
+					.filter(e -> !predictions.computeIfAbsent(entry.getKey(), o -> new HashSet<>()).contains(e))
+					.collect(Collectors.toSet());
 
-				System.out.println(entry.getKey() + "|" + common + "|" + entry.getValue().size() + "|"
-						+ predictions.get(entry.getKey()).size());
+			System.out.println(entry.getKey() + "|" + common + "|" + entry.getValue().size() + "|"
+					+ predictions.get(entry.getKey()).size());
 
-				double recall = common / (double) (common + fn.size());
-				double precision = common / (double) (common + fp.size());
-				double f1 = (2 * precision * recall) / (precision + recall);
+			double recall = common / (double) (common + fn.size());
+			double precision = common / (double) (common + fp.size());
+			double f1 = (2 * precision * recall) / (precision + recall);
 
-				tps += common;
-				fns += fn.size();
-				fps += fp.size();
+			tps += common;
+			fns += fn.size();
+			fps += fp.size();
 
-				System.out.println(entry.getKey() + "|" + precision + "|" + recall + "|" + f1);
-				System.out.println("FP:" + fp);
-				System.out.println("FN:" + fn);
-			}
+			System.out.println(entry.getKey() + "|" + precision + "|" + recall + "|" + f1);
+			System.out.println("FP:" + fp);
+			System.out.println("FN:" + fn);
 		}
 
 		double recalls = tps / (tps + fns);

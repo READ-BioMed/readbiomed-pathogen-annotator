@@ -1,4 +1,4 @@
-package readbiomed.annotators.dictionary.pathogens.build.NCBITaxonomy;
+package readbiomed.annotators.dictionary.pathogens.build;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -27,7 +27,9 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 
-public class NCBIDictionaryBuilder extends DefaultHandler {
+import readbiomed.bmip.dataset.PrPSc.PrPScDocuments;
+
+public class DictionaryBuilder extends DefaultHandler {
 
 	private enum Tag {
 		Class, Axiom
@@ -46,7 +48,7 @@ public class NCBIDictionaryBuilder extends DefaultHandler {
 
 	List<String> searchItemsList = null;
 
-	public NCBIDictionaryBuilder() throws IOException {
+	public DictionaryBuilder() throws IOException {
 	}
 
 	private static String removeOBOURL(String string) {
@@ -135,6 +137,7 @@ public class NCBIDictionaryBuilder extends DefaultHandler {
 			xmlWriter.writeStartDocument();
 			xmlWriter.writeStartElement("synonym");
 
+			// NCBI dictionary
 			for (Map.Entry<String, NCBIEntry> entry : map.entrySet()) {
 				if (searchItemsList.contains(entry.getValue().getCanonical().toLowerCase()) || entry.getValue()
 						.getSynonyms().parallelStream().anyMatch(e -> searchItemsList.contains(e.toLowerCase()))) {
@@ -146,6 +149,33 @@ public class NCBIDictionaryBuilder extends DefaultHandler {
 
 					xmlWriter.writeEndElement();
 				}
+			}
+
+			// PrPSc dictionary
+			xmlWriter.writeStartElement("token");
+			xmlWriter.writeAttribute("id", "prpsc-prion");
+			xmlWriter.writeAttribute("canonical", "prion");
+			xmlWriter.writeStartElement("variant");
+			xmlWriter.writeAttribute("base", "prion");
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndElement();
+
+			xmlWriter.writeStartElement("token");
+			xmlWriter.writeAttribute("id", "prpsc-prpsc");
+			xmlWriter.writeAttribute("canonical", "PrPSc");
+			xmlWriter.writeStartElement("variant");
+			xmlWriter.writeAttribute("base", "PrPSc");
+			xmlWriter.writeEndElement();
+			xmlWriter.writeEndElement();
+
+			for (String[] s : PrPScDocuments.species) {
+				xmlWriter.writeStartElement("token");
+				xmlWriter.writeAttribute("id", "prpsc-" + s[0]);
+				xmlWriter.writeAttribute("canonical", s[0]);
+				xmlWriter.writeStartElement("variant");
+				xmlWriter.writeAttribute("base", s[0]);
+				xmlWriter.writeEndElement();
+				xmlWriter.writeEndElement();
 			}
 
 			// End Synonym
@@ -160,7 +190,7 @@ public class NCBIDictionaryBuilder extends DefaultHandler {
 			throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, XMLStreamException {
 		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
 		SAXParser saxParser = saxParserFactory.newSAXParser();
-		NCBIDictionaryBuilder handler = new NCBIDictionaryBuilder();
+		DictionaryBuilder handler = new DictionaryBuilder();
 		XMLReader reader = saxParser.getXMLReader();
 		reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 		saxParser.parse(new GZIPInputStream(new FileInputStream("/home/antonio/Documents/UoM/ncbitaxon.owl.gz"), 65536),
@@ -168,7 +198,7 @@ public class NCBIDictionaryBuilder extends DefaultHandler {
 
 		handler.buildTree();
 
-		handler.writeDictionary("/home/antonio/Documents/UoM/ncbi-dict.xml",
+		handler.writeDictionary("/home/antonio/Documents/UoM/dict.xml",
 				"/home/antonio/Documents/UoM/ncbi-pathogens.txt");
 
 		System.out.println(handler.map.size());

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -21,12 +20,10 @@ import readbiomed.bmip.dataset.toxins.ToxinBuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
 public class ToxinExperimenter {
-	private static final Pattern p = Pattern.compile("/");
 
 	public static Map<String, Set<String>> annotateNCBISet(String dictURI, String folderName) throws Exception {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
-		//AnalysisEngine ae = AnalysisEngineFactory.createEngine(ConceptMapperFactory.create(dictURI));
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(ToxinRegexAnnotator.class);
 
 		JCas jCas = JCasFactory.createJCas();
@@ -44,15 +41,11 @@ public class ToxinExperimenter {
 
 					String pmid = ViewUriUtil.getURI(jCas).toString();
 
-					//JCasUtil.select(jCas, DictTerm.class).forEach(e -> prediction
-					//		.computeIfAbsent(e.getDictCanon().toLowerCase(), o -> new HashSet<String>()).add(pmid));
-					
 					JCasUtil.select(jCas, NamedEntityMention.class).forEach(e -> prediction
 							.computeIfAbsent(e.getMentionId(), o -> new HashSet<String>()).add(pmid));
 
 					jCas.reset();
 				}
-				//break;
 			}
 		}
 
