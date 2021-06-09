@@ -28,12 +28,12 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.token.type.Sentence;
 import org.cleartk.util.ViewUriUtil;
 
-import readbiomed.annotators.dictionary.pathogens.PathogenAnnotator;
+import readbiomed.annotators.dictionary.pathogens.PathogenNCBIExperimenter;
 import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.document.Section;
 import uima.tt.TokenAnnotation;
 
-public class PrPScAnnotator extends CleartkAnnotator<String> {
+public class PrPScMLAnnotator extends CleartkAnnotator<String> {
 
 	private Map<String, Set<String>> gt = null;
 
@@ -41,9 +41,9 @@ public class PrPScAnnotator extends CleartkAnnotator<String> {
 	public void initialize(UimaContext context) throws ResourceInitializationException {
 		super.initialize(context);
 		try {
-			if (context.getConfigParameterValue(PathogenAnnotator.PARAM_GROUND_TRUTH) != null) {
+			if (context.getConfigParameterValue(PathogenNCBIExperimenter.PARAM_GROUND_TRUTH) != null) {
 				gt = (Map<String, Set<String>>) Serialization
-						.deserialize((String) context.getConfigParameterValue(PathogenAnnotator.PARAM_GROUND_TRUTH));
+						.deserialize((String) context.getConfigParameterValue(PathogenNCBIExperimenter.PARAM_GROUND_TRUTH));
 			}
 		} catch (ClassNotFoundException | IOException e) {
 			e.printStackTrace();
@@ -118,7 +118,7 @@ public class PrPScAnnotator extends CleartkAnnotator<String> {
 			List<Feature> features = new ArrayList<Feature>();
 			features.addAll(getInTitle(candidate, jCas));
 			features.addAll(getAnotherInTitle(candidate, jCas));
-			//features.addAll(getCandidateAbstractText(candidate, jCas));
+			// features.addAll(getCandidateAbstractText(candidate, jCas));
 
 			if (isTraining()) {
 				String pmid = ViewUriUtil.getURI(jCas).toString();
@@ -127,8 +127,7 @@ public class PrPScAnnotator extends CleartkAnnotator<String> {
 				this.dataWriter.write(new Instance<String>(category, features));
 			} else {
 				// If background, remove it from the list of elements
-				if (this.classifier.classify(features).equals("1")) 
-				{
+				if (this.classifier.classify(features).equals("1")) {
 					keepList.add(candidate);
 				}
 			}
@@ -146,16 +145,15 @@ public class PrPScAnnotator extends CleartkAnnotator<String> {
 
 	public static AnalysisEngineDescription getClassifierDescription(String modelFileName)
 			throws ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(PrPScAnnotator.class,
+		return AnalysisEngineFactory.createEngineDescription(PrPScMLAnnotator.class,
 				GenericJarClassifierFactory.PARAM_CLASSIFIER_JAR_PATH, modelFileName);
 	}
 
 	public static AnalysisEngineDescription getWriterDescription(String outputDirectory, String gt)
 			throws ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(PrPScAnnotator.class, CleartkAnnotator.PARAM_IS_TRAINING,
+		return AnalysisEngineFactory.createEngineDescription(PrPScMLAnnotator.class, CleartkAnnotator.PARAM_IS_TRAINING,
 				true, DirectoryDataWriterFactory.PARAM_OUTPUT_DIRECTORY, outputDirectory,
 				DefaultDataWriterFactory.PARAM_DATA_WRITER_CLASS_NAME, LibSvmStringOutcomeDataWriter.class,
-				PathogenAnnotator.PARAM_GROUND_TRUTH, gt);
+				PathogenNCBIExperimenter.PARAM_GROUND_TRUTH, gt);
 	}
-
 }

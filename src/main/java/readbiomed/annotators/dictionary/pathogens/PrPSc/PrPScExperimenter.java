@@ -34,7 +34,7 @@ public class PrPScExperimenter {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(ConceptMapperFactory.create(dictURI));
 		builder.add(SentenceAnnotator.getDescription());
-		builder.add(PrPScAnnotator.getWriterDescription(modelFolderName, Serialization.serialize((Serializable) gt)));
+		builder.add(PrPScMLAnnotator.getWriterDescription(modelFolderName, Serialization.serialize((Serializable) gt)));
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
@@ -67,7 +67,7 @@ public class PrPScExperimenter {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(ConceptMapperFactory.create(dictURI));
 		builder.add(SentenceAnnotator.getDescription());
-		builder.add(PrPScAnnotator.getClassifierDescription(folderName + "/model/model.jar"));
+		builder.add(PrPScMLAnnotator.getClassifierDescription(folderName + "/model/model.jar"));
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 

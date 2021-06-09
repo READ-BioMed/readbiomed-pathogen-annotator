@@ -1,3 +1,4 @@
 classpath*:types/*.xml
 classpath*:desc/types/*.xml
 classpath*:readbiomed/document/**/*.xml
+classpath*:readbiomed/annotators/dictionary/utils/**/*.xml

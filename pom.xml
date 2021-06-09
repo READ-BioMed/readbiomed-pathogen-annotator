@@ -49,6 +49,7 @@
 						<configuration>
 							<typeSystemIncludes>
 								<typeSystemInclude>src/main/resources/readbiomed/document/TypeSystem.xml</typeSystemInclude>
+								<typeSystemInclude>src/main/java/readbiomed/annotators/dictionary/utils/ConceptMapperTypes.xml</typeSystemInclude>
 							</typeSystemIncludes>
 							<typeSystemExcludes>
 							</typeSystemExcludes>

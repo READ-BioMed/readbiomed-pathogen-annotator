@@ -49,7 +49,7 @@ public class ToxinRegexAnnotator extends JCasAnnotator_ImplBase {
 		}
 	}
 
-	public static AnalysisEngineDescription getDescription(String modelFileName)
+	public static AnalysisEngineDescription getDescription()
 			throws ResourceInitializationException {
 		return AnalysisEngineFactory.createEngineDescription(ToxinRegexAnnotator.class);
 	}
