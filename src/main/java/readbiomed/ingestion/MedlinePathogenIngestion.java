@@ -1,7 +1,10 @@
 package readbiomed.ingestion;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,18 +12,23 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 
 import javax.naming.NamingException;
 
-import org.apache.uima.UIMAException;
-import org.apache.uima.fit.factory.AggregateBuilder;
-import org.apache.uima.fit.pipeline.SimplePipeline;
+import org.apache.uima.analysis_engine.AnalysisEngine;
+import org.apache.uima.fit.component.JCasCollectionReader_ImplBase;
+import org.apache.uima.fit.factory.AnalysisEngineFactory;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.util.InvalidXMLException;
+import org.cleartk.ne.type.NamedEntityMention;
+import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
 import readbiomed.annotators.dictionary.pathogens.PathogenAnnotator;
-import readbiomed.annotators.dictionary.utils.PrintConsumer;
 import readbiomed.readers.medline.MedlineReader;
 
 public class MedlinePathogenIngestion implements Runnable {
@@ -35,12 +43,14 @@ public class MedlinePathogenIngestion implements Runnable {
 
 	public static Map<String, Integer> mapCanonical = Collections.synchronizedMap(new HashMap<>());
 
-	private String dictionaryFileName;
 	private String outputFolderName;
+	private AnalysisEngine ae;
 
-	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName) {
-		this.dictionaryFileName = dictionaryFileName;
+	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName)
+			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
+		ae = AnalysisEngineFactory
+				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
 	}
 
 	@Override
@@ -49,19 +59,27 @@ public class MedlinePathogenIngestion implements Runnable {
 		while ((file = getNext()) != null) {
 			System.out.println("Indexing: " + file.getName());
 
-			AggregateBuilder builder;
-			try {
-				builder = PathogenAnnotator.getPipeline(dictionaryFileName);
-				builder.add(PrintConsumer
-						.getDescription(new File(outputFolderName, file.getName() + ".txt").getAbsolutePath()));
-				builder.createAggregateDescription();
+			try (PrintWriter w = new PrintWriter(new OutputStreamWriter(new GZIPOutputStream(
+					new FileOutputStream(new File(outputFolderName, file.getName() + ".txt.gz")))))) {
+				
+				JCas jCas = JCasFactory.createJCas();
 
-				SimplePipeline.runPipeline(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()),
-						builder.createAggregateDescription());
+				JCasCollectionReader_ImplBase cr = (JCasCollectionReader_ImplBase) org.apache.uima.fit.factory.CollectionReaderFactory
+						.createReader(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()));
 
-			} catch (InvalidXMLException | ResourceInitializationException | IOException | SAXException e1) {
-				e1.printStackTrace();
-			} catch (UIMAException e) {
+				while (cr.hasNext()) {
+					cr.getNext(jCas);
+					ae.process(jCas);
+
+					String pmid = ViewUriUtil.getURI(jCas).toString();
+
+					JCasUtil.select(jCas, NamedEntityMention.class).stream().forEach(e -> w.println(pmid + "|"
+							+ e.getMentionId() + "|" + e.getBegin() + "|" + e.getEnd() + "|" + e.getCoveredText()));
+
+					jCas.reset();
+				}
+
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 
@@ -69,7 +87,8 @@ public class MedlinePathogenIngestion implements Runnable {
 		}
 	}
 
-	public static void main(String[] argc) throws ClassNotFoundException, NamingException, SQLException {
+	public static void main(String[] argc) throws ClassNotFoundException, NamingException, SQLException,
+			ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 
 		File folder = new File(argc[0]);
 		int nThreads = Integer.parseInt(argc[3]);
