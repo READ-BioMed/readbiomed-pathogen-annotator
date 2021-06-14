@@ -50,10 +50,8 @@ public class MedlinePathogenIngestion implements Runnable {
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
 
-		synchronized (this) {
-			ae = AnalysisEngineFactory
-					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
-		}
+		ae = AnalysisEngineFactory
+				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
 	}
 
 	@Override
