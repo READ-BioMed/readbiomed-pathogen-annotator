@@ -49,8 +49,11 @@ public class MedlinePathogenIngestion implements Runnable {
 	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName)
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
-		ae = AnalysisEngineFactory
-				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+
+		synchronized (this) {
+			ae = AnalysisEngineFactory
+					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		}
 	}
 
 	@Override
@@ -61,7 +64,7 @@ public class MedlinePathogenIngestion implements Runnable {
 
 			try (PrintWriter w = new PrintWriter(new OutputStreamWriter(new GZIPOutputStream(
 					new FileOutputStream(new File(outputFolderName, file.getName() + ".txt.gz")))))) {
-				
+
 				JCas jCas = JCasFactory.createJCas();
 
 				JCasCollectionReader_ImplBase cr = (JCasCollectionReader_ImplBase) org.apache.uima.fit.factory.CollectionReaderFactory
