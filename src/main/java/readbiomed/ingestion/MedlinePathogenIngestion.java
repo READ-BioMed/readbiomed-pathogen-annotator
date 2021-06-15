@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,17 +38,18 @@ public class MedlinePathogenIngestion implements Runnable {
 		return stack.pop();
 	}
 
-	public static Map<String, Integer> mapCanonical = Collections.synchronizedMap(new HashMap<>());
-
 	private String outputFolderName;
-	private AnalysisEngine ae;
+	private static AnalysisEngine ae = null;
 
 	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName)
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
 
-		ae = AnalysisEngineFactory
-				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		synchronized (ae) {
+			if (ae == null)
+				ae = AnalysisEngineFactory
+						.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		}
 	}
 
 	@Override
@@ -70,7 +68,10 @@ public class MedlinePathogenIngestion implements Runnable {
 
 				while (cr.hasNext()) {
 					cr.getNext(jCas);
-					ae.process(jCas);
+
+					synchronized (ae) {
+						ae.process(jCas);
+					}
 
 					String pmid = ViewUriUtil.getURI(jCas).toString();
 
