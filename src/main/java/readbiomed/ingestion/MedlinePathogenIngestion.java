@@ -45,11 +45,9 @@ public class MedlinePathogenIngestion implements Runnable {
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
 
-		synchronized (MedlinePathogenIngestion.class) {
-			if (ae == null)
-				ae = AnalysisEngineFactory
-						.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
-		}
+		if (ae == null)
+			ae = AnalysisEngineFactory
+					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
 	}
 
 	@Override
@@ -69,9 +67,7 @@ public class MedlinePathogenIngestion implements Runnable {
 				while (cr.hasNext()) {
 					cr.getNext(jCas);
 
-					synchronized (ae) {
-						ae.process(jCas);
-					}
+					ae.process(jCas);
 
 					String pmid = ViewUriUtil.getURI(jCas).toString();
 
