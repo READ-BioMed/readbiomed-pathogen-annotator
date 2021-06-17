@@ -39,19 +39,27 @@ public class MedlinePathogenIngestion implements Runnable {
 	}
 
 	private String outputFolderName;
+	private String dictionaryFileName;
 	private static AnalysisEngine ae = null;
 
 	public MedlinePathogenIngestion(String dictionaryFileName, String outputFolderName)
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
-
-		ae = AnalysisEngineFactory
-				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		this.dictionaryFileName = dictionaryFileName;
 	}
 
 	@Override
 	public void run() {
 		File file = null;
+		
+		try {
+			ae = AnalysisEngineFactory
+					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		} catch (ResourceInitializationException | InvalidXMLException | IOException | SAXException e1) {
+			e1.printStackTrace();
+			return;
+		}
+		
 		while ((file = getNext()) != null) {
 			System.out.println("Indexing: " + file.getName());
 
