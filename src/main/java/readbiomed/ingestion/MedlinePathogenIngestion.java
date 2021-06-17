@@ -45,9 +45,8 @@ public class MedlinePathogenIngestion implements Runnable {
 			throws ResourceInitializationException, InvalidXMLException, IOException, SAXException {
 		this.outputFolderName = outputFolderName;
 
-		if (ae == null)
-			ae = AnalysisEngineFactory
-					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+		ae = AnalysisEngineFactory
+				.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
 	}
 
 	@Override
