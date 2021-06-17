@@ -28,8 +28,8 @@ public class ConceptMapperFactory {
 		AnalysisEngineDescription offsetTokenizer = AnalysisEngineFactory.createEngineDescription(OffsetTokenizer.class,
 				OffsetTokenizer.PARAM_CASE_MATCH, "ignoreall", OffsetTokenizer.PARAM_TOKEN_DELIM,
 				"/-*&@(){}|[]<>\\'`\":;,$%+.?!", OffsetTokenizer.PARAM_STEMMER_CLASS,
-				//ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
-                ConceptMapperBioLemmatizerPool.class);
+				ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
+                //ConceptMapperBioLemmatizerPool.class);
 
 		File tmpTokenizerDescription = File.createTempFile("preffix_", "_suffix");
 		tmpTokenizerDescription.deleteOnExit();
@@ -48,8 +48,8 @@ public class ConceptMapperFactory {
 				ConceptMapper.PARAM_FINDALLMATCHES, false, ConceptMapper.PARAM_ORDERINDEPENDENTLOOKUP, false,
 				OffsetTokenizer.PARAM_CASE_MATCH, "ignoreall", OffsetTokenizer.PARAM_TOKEN_DELIM,
 				"/-*&@(){}|[]<>\\'`\":;,$%+.?!", OffsetTokenizer.PARAM_STEMMER_CLASS,
-				//ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
-		        ConceptMapperBioLemmatizerPool.class);
+				ConceptMapperStemmerFactory.getStemmerClass(ConceptMapperStemmerFactory.StemmerType.BIOLEMMATIZER));
+		        //ConceptMapperBioLemmatizerPool.class);
 
 		createDependencyAndBind(conceptMapper, ConceptMapper.PARAM_DICT_FILE, DictionaryResource_impl.class,
 				dictionaryFileName);
