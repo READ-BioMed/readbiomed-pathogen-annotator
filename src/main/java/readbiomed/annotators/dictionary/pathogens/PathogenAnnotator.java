@@ -22,7 +22,7 @@ public class PathogenAnnotator {
 		builder.add(NCBITaxonomyAnnotator.getDescription());
 		builder.add(PrPScDictionaryAnnotator.getDescription());
 		builder.add(ToxinRegexAnnotator.getDescription());
-		
+
 		return builder;
 	}
 }
