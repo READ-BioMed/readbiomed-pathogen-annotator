@@ -147,5 +147,11 @@
 			<artifactId>nlp-pipelines-conceptmapper</artifactId>
 			<version>0.5.4</version>
 		</dependency>
+		<dependency>
+			<groupId>au.com.nicta.csp</groupId>
+			<artifactId>MTIMLExtension</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+			<packaging>jar</packaging>
+		</dependency>
 	</dependencies>
 </project>

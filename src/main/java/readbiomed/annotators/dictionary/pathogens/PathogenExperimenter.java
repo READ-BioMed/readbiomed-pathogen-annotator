@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -24,6 +23,7 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
+import readbiomed.annotators.dictionary.utils.CharacterizationEvaluation;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
 
 public class PathogenExperimenter {
@@ -32,7 +32,7 @@ public class PathogenExperimenter {
 			throws UIMAException, IOException, URISyntaxException, SAXException {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
-		AggregateBuilder builder = PathogenAnnotator.getPipeline(dictFileName);
+		AggregateBuilder builder = PathogenDictionaryAnnotator.getPipeline(dictFileName);
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
@@ -47,11 +47,10 @@ public class PathogenExperimenter {
 
 			ae.process(jCas);
 
-			Set<String> ids = new HashSet<>();
-			prediction.put(fileName, ids);
-
-			JCasUtil.select(jCas, NamedEntityMention.class).stream().filter(e -> e.getMentionType().equals("pathogen"))
-					.forEach(e -> ids.add(e.getMentionId()));
+			prediction.put(fileName,
+					JCasUtil.select(jCas, NamedEntityMention.class).stream()
+							.filter(e -> e.getMentionType().equals("pathogen")).map(e -> e.getMentionId())
+							.collect(Collectors.toSet()));
 		}
 
 		ae.collectionProcessComplete();
@@ -60,28 +59,11 @@ public class PathogenExperimenter {
 
 	}
 
-	private static Map<String, Set<String>> getGT(String fileName) throws IOException {
-		Map<String, Set<String>> gt = new HashMap<>();
-
-		FileUtils.listFiles(new File(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
-				new TextFileFilter(), null).stream()
-				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
-
-		// Read CSV. The first line is skipped
-		Files.lines(Paths.get(fileName)).map(line -> line.split(",")).skip(1).filter(e -> e.length == 5).forEach(e -> {
-			gt.putIfAbsent(e[0], new HashSet<>());
-			gt.get(e[0]).add(e[4]);
-		});
-
-		return gt;
-	}
-
 	public static void main(String[] argc) throws UIMAException, IOException, URISyntaxException, SAXException {
-		String dictFileName = "file:/home/antonio/Documents/UoM/ncbi-dict.xml";
-		// String dictFileName = "file:/home/antonio/Documents/UoM/testDict.xml";
+		String dictFileName = "file:/home/antonio/Documents/UoM/dictionaries/dict.xml";
 
-		Map<String, Set<String>> gt = getGT("/home/antonio/Documents/UoM/manual-annotation-gt.csv");
+		Map<String, Set<String>> gt = CharacterizationEvaluation.getGT(
+				"/home/antonio/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv");
 
 		System.out.println(gt.size());
 		System.out.println(gt);

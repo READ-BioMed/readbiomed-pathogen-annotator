@@ -12,7 +12,7 @@ import readbiomed.annotators.dictionary.pathogens.PrPSc.PrPScDictionaryAnnotator
 import readbiomed.annotators.dictionary.pathogens.toxins.ToxinRegexAnnotator;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 
-public class PathogenAnnotator {
+public class PathogenDictionaryAnnotator {
 
 	public static AggregateBuilder getPipeline(String dictFileName)
 			throws InvalidXMLException, ResourceInitializationException, IOException, SAXException

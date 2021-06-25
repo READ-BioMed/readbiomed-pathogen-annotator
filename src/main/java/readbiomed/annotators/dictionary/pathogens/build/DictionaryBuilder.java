@@ -107,18 +107,29 @@ public class DictionaryBuilder extends DefaultHandler {
 		});
 	}
 
-	private void writeDictionaryChildren(NCBIEntry ncbiEntry, XMLStreamWriter xmlWriter) throws XMLStreamException {
-		xmlWriter.writeStartElement("variant");
-		xmlWriter.writeAttribute("base", ncbiEntry.getCanonical());
-		xmlWriter.writeEndElement();
+	private void printTerm(String term, XMLStreamWriter xmlWriter) throws XMLStreamException {
+		if (term.length() > 3 && !term.equalsIgnoreCase("unidentified subtype")
+				&& !term.toLowerCase().startsWith("influenza a virus (")
+				&& !term.toLowerCase().startsWith("influenza b virus (")
+				&& !term.toLowerCase().startsWith("influenza c virus (")) {
+			xmlWriter.writeStartElement("variant");
+			xmlWriter.writeAttribute("base", term);
+			xmlWriter.writeEndElement();
 
-		for (String term : ncbiEntry.getSynonyms()) {
-			// Do not consider terms that are too short
-			if (term.length() > 3) {
+			// Remove subtype to identify specific pathogen names
+			if (term.contains("subtype")) {
 				xmlWriter.writeStartElement("variant");
-				xmlWriter.writeAttribute("base", term);
+				xmlWriter.writeAttribute("base", term.replaceAll("subtype", "").trim());
 				xmlWriter.writeEndElement();
 			}
+		}
+	}
+
+	private void writeDictionaryChildren(NCBIEntry ncbiEntry, XMLStreamWriter xmlWriter) throws XMLStreamException {
+		printTerm(ncbiEntry.getCanonical(), xmlWriter);
+
+		for (String term : ncbiEntry.getSynonyms()) {
+			printTerm(term, xmlWriter);
 		}
 
 		for (String child : ncbiEntry.getChildren()) {

@@ -25,7 +25,7 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
-import readbiomed.annotators.dictionary.pathogens.PathogenAnnotator;
+import readbiomed.annotators.dictionary.pathogens.PathogenDictionaryAnnotator;
 import readbiomed.readers.medline.MedlineReader;
 
 public class MedlinePathogenIngestion implements Runnable {
@@ -54,7 +54,7 @@ public class MedlinePathogenIngestion implements Runnable {
 		
 		try {
 			ae = AnalysisEngineFactory
-					.createEngine(PathogenAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
+					.createEngine(PathogenDictionaryAnnotator.getPipeline(dictionaryFileName).createAggregateDescription());
 		} catch (ResourceInitializationException | InvalidXMLException | IOException | SAXException e1) {
 			e1.printStackTrace();
 			return;

@@ -1,19 +1,41 @@
 package readbiomed.annotators.dictionary.utils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+
 public class CharacterizationEvaluation {
 
 	private static final Pattern p = Pattern.compile(",");
 
+	public static Map<String, Set<String>> getGT(String fileName) throws IOException {
+		Map<String, Set<String>> gt = new HashMap<>();
+
+		FileUtils.listFiles(new File(
+				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
+				new TextFileFilter(), null).stream()
+				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
+
+		// Read CSV. The first line is skipped
+		Files.lines(Paths.get(fileName)).map(line -> line.split(",")).skip(1).filter(e -> e.length == 5).forEach(e -> {
+			gt.putIfAbsent(e[0], new HashSet<>());
+			gt.get(e[0]).add(e[4]);
+		});
+
+		return gt;
+	}
+	
 	public static Map<String, Set<String>> getGroundTruth(String fileName) throws FileNotFoundException, IOException {
 		Map<String, Set<String>> mappings = new HashMap<>();
 
