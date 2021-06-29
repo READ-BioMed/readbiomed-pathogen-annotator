@@ -151,7 +151,6 @@
 			<groupId>au.com.nicta.csp</groupId>
 			<artifactId>MTIMLExtension</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-			<packaging>jar</packaging>
 		</dependency>
 	</dependencies>
 </project>
