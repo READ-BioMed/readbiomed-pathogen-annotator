@@ -1,6 +1,10 @@
 from constants import model_name, device, max_len, model_file
 from transformers import BertForSequenceClassification
+from transformers import AutoTokenizer
+
 import torch
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 model = BertForSequenceClassification.from_pretrained(
         model_name,
