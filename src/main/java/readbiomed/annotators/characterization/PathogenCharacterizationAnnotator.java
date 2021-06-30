@@ -22,10 +22,11 @@ public class PathogenCharacterizationAnnotator {
 		 * "gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor",
 		 * "-l -n -c"));
 		 */
-		builder.add(BMIPDocumentNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.excel.gz",
-				"/Users/ajimeno/Documents/MTI_ML/classifiers.excel.gz",
-				"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c"));
+		//builder.add(BMIPDocumentNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.excel.gz",
+		//		"/Users/ajimeno/Documents/MTI_ML/classifiers.excel.gz",
+		//		"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c"));
 
+		builder.add(BMIPBERTDocumentNotRelevantAnnotator.getDescription("http://localhost:5000"));
 		return builder;
 	}
 }
