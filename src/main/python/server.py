@@ -4,6 +4,7 @@ from transformers import AutoTokenizer
 
 import numpy as np
 import torch
+from torch.nn.functional import softmax
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
@@ -42,9 +43,11 @@ def predict (string):
                         attention_mask=attention_mask)
 
         (logits, ) = outputs
-                      
-        logits = logits.detach().cpu().numpy()
-        return str(np.argmax(logits, axis=1).flatten())
+     
+        return str(softmax(logits).detach().cpu().numpy()[0][1])
+                 
+        #logits = logits.detach().cpu().numpy()
+        #return str(np.argmax(logits, axis=1).flatten())
 
 from flask import Flask, request
 
