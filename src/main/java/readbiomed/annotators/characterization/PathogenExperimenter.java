@@ -71,12 +71,12 @@ public class PathogenExperimenter {
 	}
 
 	public static void main(String[] argc) throws IOException, SAXException, UIMAException, URISyntaxException {
-		String inputFolderName = argc[0];
-		String dictionaryFileName = argc[1];
-		String SDTPredictionFolderName = argc[2];
+		//String inputFolderName = argc[0];
+		String dictionaryFileName = "file:/Users/ajimeno/Documents/UoM/dictionaries/dict.xml";
+		//String SDTPredictionFolderName = argc[2];
 
 		Map<String, Set<String>> gt = CharacterizationEvaluation.getGT(
-				"/home/antonio/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv");
+				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv");
 
 		Map<String, Set<String>> predictions = new HashMap<>();
 
@@ -87,7 +87,7 @@ public class PathogenExperimenter {
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(pa.createAggregateDescription());
 
 		for (File file : FileUtils.listFiles(new File(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
+				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/articles-txt-format"),
 				new TextFileFilter(), null)) {
 			String fileName = file.getName().replaceAll(".txt$", "");
 

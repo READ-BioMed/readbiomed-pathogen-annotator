@@ -24,6 +24,8 @@ public class BMIPDocumentNotRelevantAnnotator extends MTIMLAnnotator {
 
 	@Override
 	public void process(JCas jCas) throws AnalysisEngineProcessException {
+		//Map <String, String> map = JCasUtil.select(jCas, Section.class).stream().collect(Collectors.toMap(Section::getSectionType, Section::getCoveredText));
+		
 		Document d = new Document();
 		d.addField("TEXT", jCas.getDocumentText());
 
@@ -35,7 +37,7 @@ public class BMIPDocumentNotRelevantAnnotator extends MTIMLAnnotator {
 		// Remove all pathogen mentions if document classified as not relevant
 		System.out.println("Predicted " + getClassifier().predict(i));
 
-		if (((readbiomed.mme.classifiers.SGD)getClassifier()).predictProbability(i).getConfidence() < 0.4) {
+		if (((readbiomed.mme.classifiers.SGD)getClassifier()).predictProbability(i).getConfidence() < 0.3) {
 			new ArrayList<NamedEntityMention>(JCasUtil.select(jCas, NamedEntityMention.class)).stream()
 					// Remove only NCBI annotations
 					.filter(e -> e.getMentionType().contentEquals("pathogen") && e.getMentionId().startsWith("ncbi-"))

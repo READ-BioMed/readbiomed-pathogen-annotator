@@ -15,14 +15,16 @@ public class PathogenCharacterizationAnnotator {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(PathogenDictionaryAnnotator.getPipeline(dictFileName).createAggregateDescription());
 
-		/*				builder.add(BMIPPathogenNotRelevantAnnotator.getDescription("/home/antonio/Downloads/mti-ml/MTI_ML/trie.gz",
-				"/home/antonio/Downloads/mti-ml/MTI_ML/classifiers.gz",
+		/*
+		 * builder.add(BMIPPathogenNotRelevantAnnotator.getDescription(
+		 * "/home/antonio/Downloads/mti-ml/MTI_ML/trie.gz",
+		 * "/home/antonio/Downloads/mti-ml/MTI_ML/classifiers.gz",
+		 * "gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor",
+		 * "-l -n -c"));
+		 */
+		builder.add(BMIPDocumentNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.excel.gz",
+				"/Users/ajimeno/Documents/MTI_ML/classifiers.excel.gz",
 				"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c"));
-*/				
-				builder.add(
-				BMIPDocumentNotRelevantAnnotator.getDescription("/home/antonio/Downloads/mti-ml/MTI_ML/trie.excel.gz",
-						"/home/antonio/Downloads/mti-ml/MTI_ML/classifiers.excel.gz",
-						"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c"));
 
 		return builder;
 	}

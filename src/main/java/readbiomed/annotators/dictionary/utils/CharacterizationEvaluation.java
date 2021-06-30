@@ -23,7 +23,7 @@ public class CharacterizationEvaluation {
 		Map<String, Set<String>> gt = new HashMap<>();
 
 		FileUtils.listFiles(new File(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
+				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/articles-txt-format"),
 				new TextFileFilter(), null).stream()
 				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
 
