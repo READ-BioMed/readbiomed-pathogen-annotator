@@ -82,7 +82,7 @@ train_dataset = TensorDataset(train_input_ids, train_attention_masks, torch.tens
 val_dataset = TensorDataset(val_input_ids, val_attention_masks, torch.tensor(val_labels))
 
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-batch_size = 64
+batch_size = 64 
 train_dataloader = DataLoader(
         train_dataset,  # The training samples.
         sampler=RandomSampler(train_dataset),  # Select batches randomly

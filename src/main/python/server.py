@@ -1,4 +1,5 @@
 from constants import model_name, device, max_len, model_file
+from transformers import BertForSequenceClassification
 
 model = BertForSequenceClassification.from_pretrained(
         model_name,
