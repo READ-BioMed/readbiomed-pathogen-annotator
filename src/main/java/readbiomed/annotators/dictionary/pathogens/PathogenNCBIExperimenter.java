@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -39,6 +40,9 @@ import org.cleartk.ml.jar.Train;
 import org.cleartk.ml.libsvm.LibSvmStringOutcomeDataWriter;
 import org.cleartk.util.ViewUriUtil;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
@@ -47,7 +51,8 @@ import readbiomed.bmip.dataset.NCBITaxonomy.DocumentEntry;
 import readbiomed.readers.medline.MedlineReader;
 import uima.tt.TokenAnnotation;
 
-public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
+@Command(name = "PathogenExperimenter", mixinStandardHelpOptions = true, version = "PathogenExperimenter 0.1", description = "Pathogen experimenter.")
+public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implements Callable<Integer> {
 	public static final String PARAM_GROUND_TRUTH = "gt";
 
 	private Map<String, Set<String>> gt = null;
@@ -148,8 +153,8 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
 	public static void train(Map<String, Set<String>> gt, String dictURI, String modelFolderName) throws Exception {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(ConceptMapperFactory.create(dictURI));
-		builder.add(
-				PathogenNCBIExperimenter.getWriterDescription(modelFolderName, Serialization.serialize((Serializable) gt)));
+		builder.add(PathogenNCBIExperimenter.getWriterDescription(modelFolderName,
+				Serialization.serialize((Serializable) gt)));
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
@@ -206,7 +211,6 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
 
 		return prediction;
 	}
-
 
 	/**
 	 * Read MEDLINE citations from documents collected using the NCBI web services
@@ -287,16 +291,20 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
 		return folds;
 	}
 
-	public static void main(String[] argc) throws Exception {
-		String dictFileName = "file:/home/antonio/Documents/UoM/ncbi-dict.xml";
+	@Parameters(index = "0", description = "PrPSc dictionary file name.", defaultValue = "file:/Users/ajimeno/Documents/UoM/ncbi-dict.xml")
+	private String dictFileName;
+	@Parameters(index = "1", description = "Data folder name.", defaultValue = "/User/ajimeno/Documents/UoM/documents/PubMed")
+	private String dataFolderName;
+	@Parameters(index = "2", description = "NCBI pathogen folder name.", defaultValue = "/Users/ajimeno/Documents/UoM/pathogens-ncbi")
+	private String NCBIDataFolderName;
 
-		Map<String, String> rootTaxonomyMapping = BuildDataset
-				.readRootTaxonomyMapping("/home/antonio/Documents/UoM/pathogens-ncbi");
+	@Override
+	public Integer call() throws Exception {
+		Map<String, String> rootTaxonomyMapping = BuildDataset.readRootTaxonomyMapping(NCBIDataFolderName);
 
 		System.out.println("Unique tanonomy entries: " + rootTaxonomyMapping.size());
 
-		Map<String, DocumentEntry> documentMap = BuildDataset
-				.readDocumentEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+		Map<String, DocumentEntry> documentMap = BuildDataset.readDocumentEntries(NCBIDataFolderName);
 
 		System.out.println("Unique documents: " + documentMap.size());
 
@@ -338,10 +346,10 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
 		// CharacterizationEvaluation.evaluate(gt, annotate(gt, dictFileName));
 
 		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName,
-				//"/home/antonio/Downloads");
-		 "/home/antonio/Documents/UoM/documents/PubMed");
+				// "/home/antonio/Downloads");
+				dataFolderName);
 
-		Map<String, Set<String>> gt = BuildDataset.readPathogenEntries("/home/antonio/Documents/UoM/pathogens-ncbi");
+		Map<String, Set<String>> gt = BuildDataset.readPathogenEntries(NCBIDataFolderName);
 
 		// Compare GT
 		for (Map.Entry<String, Set<String>> entry : gt.entrySet()) {
@@ -414,5 +422,11 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> {
 		 * CharacterizationEvaluation.evaluate(testingSet, test(testingSet,
 		 * dictFileName, "/home/antonio/Documents/UoM/model/model.jar")); }
 		 */
+		return 0;
+	}
+
+	public static void main(String[] argc) throws Exception {
+		int exitCode = new CommandLine(new PathogenNCBIExperimenter()).execute(argc);
+		System.exit(exitCode);
 	}
 }

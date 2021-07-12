@@ -37,7 +37,7 @@ public class BMIPDocumentNotRelevantAnnotator extends MTIMLAnnotator {
 		// Remove all pathogen mentions if document classified as not relevant
 		System.out.println("Predicted " + getClassifier().predict(i));
 
-		if (((readbiomed.mme.classifiers.SGD)getClassifier()).predictProbability(i).getConfidence() < 0.3) {
+		if (((readbiomed.mme.classifiers.SGD)getClassifier()).predictProbability(i).getConfidence() < 0.4) {
 			new ArrayList<NamedEntityMention>(JCasUtil.select(jCas, NamedEntityMention.class)).stream()
 					// Remove only NCBI annotations
 					.filter(e -> e.getMentionType().contentEquals("pathogen") && e.getMentionId().startsWith("ncbi-"))

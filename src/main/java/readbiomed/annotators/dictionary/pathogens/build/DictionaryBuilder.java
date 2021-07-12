@@ -1,7 +1,6 @@
 package readbiomed.annotators.dictionary.pathogens.build;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,10 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -27,9 +26,13 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.bmip.dataset.PrPSc.PrPScDocuments;
 
-public class DictionaryBuilder extends DefaultHandler {
+@Command(name = "DictionaryBuilder", mixinStandardHelpOptions = true, version = "DictionaryBuilder 0.1", description = "Build pathogen dictionary based on the NCBI taxonomy data set.")
+public class DictionaryBuilder extends DefaultHandler implements Callable<Integer> {
 
 	private enum Tag {
 		Class, Axiom
@@ -197,21 +200,32 @@ public class DictionaryBuilder extends DefaultHandler {
 		}
 	}
 
-	public static void main(String[] argc)
-			throws ParserConfigurationException, SAXException, FileNotFoundException, IOException, XMLStreamException {
+	@Parameters(index = "0", description = "NCBI taxonomy file name.", defaultValue = "/home/antonio/Documents/UoM/ncbitaxon.owl.gz")
+	private String NCBITaxonomyFileName;
+	@Parameters(index = "1", description = "Output dictionary file name.", defaultValue = "/home/antonio/Documents/UoM/dict.xml")
+	private String outputDictionaryFileName;
+	@Parameters(index = "2", description = "NCBI pathogen file name.", defaultValue = "/home/antonio/Documents/UoM/ncbi-pathogens.txt")
+	private String ncbiPathogenFileName;
+
+	@Override
+	public Integer call() throws Exception {
 		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance();
 		SAXParser saxParser = saxParserFactory.newSAXParser();
 		DictionaryBuilder handler = new DictionaryBuilder();
 		XMLReader reader = saxParser.getXMLReader();
 		reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-		saxParser.parse(new GZIPInputStream(new FileInputStream("/home/antonio/Documents/UoM/ncbitaxon.owl.gz"), 65536),
-				handler);
+		saxParser.parse(new GZIPInputStream(new FileInputStream(NCBITaxonomyFileName), 65536), handler);
 
 		handler.buildTree();
 
-		handler.writeDictionary("/home/antonio/Documents/UoM/dict.xml",
-				"/home/antonio/Documents/UoM/ncbi-pathogens.txt");
+		handler.writeDictionary(outputDictionaryFileName, ncbiPathogenFileName);
 
 		System.out.println(handler.map.size());
+		return 0;
+	}
+
+	public static void main(String[] argc) throws IOException {
+		int exitCode = new CommandLine(new DictionaryBuilder()).execute(argc);
+		System.exit(exitCode);
 	}
 }

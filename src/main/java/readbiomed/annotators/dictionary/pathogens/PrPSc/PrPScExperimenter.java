@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -21,12 +22,16 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.opennlp.tools.SentenceAnnotator;
 import org.cleartk.util.ViewUriUtil;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.bmip.dataset.PrPSc.PrPScBuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
-public class PrPScExperimenter {
+@Command(name = "PrPScExperimenter", mixinStandardHelpOptions = true, version = "PrPScExperimenter 0.1", description = "PrPSc experimenter.")
+public class PrPScExperimenter implements Callable<Integer> {
 	public static void train(String dictURI, String folderName, Map<String, Set<String>> gt) throws Exception {
 
 		String modelFolderName = folderName + "/model";
@@ -99,22 +104,27 @@ public class PrPScExperimenter {
 		return prediction;
 	}
 
-	public static void main(String[] argc) throws Exception {
-		String dictFileName = "file:/home/antonio/Documents/UoM/prpsc-dict.xml";
-		String folderName = "/home/antonio/Documents/UoM/prpsc-ncbi-data/PubMed";
+	@Parameters(index = "0", description = "PrPSc dictionary file name.", defaultValue = "file:/home/antonio/Documents/UoM/prpsc-dict.xml")
+	private String dictFileName;
+	@Parameters(index = "1", description = "Output folder name.", defaultValue = "/home/antonio/Documents/UoM/prpsc-ncbi-data/PubMed")
+	private String outputFolderName;
+	@Parameters(index = "2", description = "NCBI pathogen folder name.", defaultValue = "/home/antonio/Documents/UoM/prpsc-ncbi-data")
+	private String prPScNCBIDataFolderName;
 
+	@Override
+	public Integer call() throws Exception {
 		String[] trainingCandidates = { "prpsc-cattle", "prpsc-cat", "prpsc-deer", "prpsc-goat" };
 		Set<String> trainingSet = new HashSet<>(Arrays.asList(trainingCandidates));
 
 		// Read GT
-		Map<String, Set<String>> gt = PrPScBuildDataset.readPrPScEntries("/home/antonio/Documents/UoM/prpsc-ncbi-data");
+		Map<String, Set<String>> gt = PrPScBuildDataset.readPrPScEntries(prPScNCBIDataFolderName);
 
 		// Train
-		train(dictFileName, folderName, gt.entrySet().stream().filter(e -> trainingSet.contains(e.getKey()))
+		train(dictFileName, outputFolderName, gt.entrySet().stream().filter(e -> trainingSet.contains(e.getKey()))
 				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue())));
 
 		// Annotate
-		Map<String, Set<String>> predictions = annotate(dictFileName, folderName);
+		Map<String, Set<String>> predictions = annotate(dictFileName, outputFolderName);
 
 		predictions.entrySet().stream().forEach(e -> System.out.println(e.getKey() + " " + e.getValue().size()));
 
@@ -147,5 +157,12 @@ public class PrPScExperimenter {
 				System.out.println("FN:" + fn);
 			}
 		}
+
+		return 0;
+	}
+
+	public static void main(String[] argc) throws Exception {
+		int exitCode = new CommandLine(new PrPScExperimenter()).execute(argc);
+		System.exit(exitCode);
 	}
 }

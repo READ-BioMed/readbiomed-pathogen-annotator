@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.xml.bind.JAXBException;
 
@@ -26,30 +27,37 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.pathogens.PathogenDictionaryAnnotator;
 import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
 /**
  * 
- * Prepare collection of documents in which a pathogen but it is present or not
- * in MeSH annotation, which defines its class. Mentions of pathogens are
- * changed to @PATHOGEN$
+ * Prepare collection of documents in which a pathogen when it is present or not
+ * in MeSH annotation, defines its class. Mentions of pathogens are changed
+ * to @PATHOGEN$
  * 
  * @author Antonio Jimeno Yepes (antonio.jimeno@gmail.com)
  *
  */
-public class RelevantPathogenSet {
+@Command(name = "RelevantPathogenSet", mixinStandardHelpOptions = true, version = "RelevantPathogenSet 0.1", description = "Generate relevant pathogen abstract set.")
+public class RelevantPathogenSet implements Callable<Integer> {
 	class SortNamedEntityMentions implements Comparator<NamedEntityMention> {
 		public int compare(NamedEntityMention a, NamedEntityMention b) {
 			return b.getBegin() - a.getBegin();
 		}
 	}
 
-	public static void main(String[] argc) throws IOException, SAXException, UIMAException, JAXBException {
-		String inputFolderName = argc[0];
-		String dictionaryFileName = argc[1];
+	@Parameters(index = "0", description = "Input folder name.")
+	private String inputFolderName;
+	@Parameters(index = "1", description = "Dictionary file name.")
+	private String dictionaryFileName;
 
+	@Override
+	public Integer call() throws Exception {
 		Map<String, Set<String>> mapNCBI = BuildDataset.readPathogenEntries(inputFolderName);
 
 		AggregateBuilder pa = PathogenDictionaryAnnotator.getPipeline(dictionaryFileName);
@@ -133,5 +141,11 @@ public class RelevantPathogenSet {
 				}
 			}
 		}
+		return 0;
+	}
+
+	public static void main(String[] argc) throws IOException, SAXException, UIMAException, JAXBException {
+		int exitCode = new CommandLine(new RelevantPathogenSet()).execute(argc);
+		System.exit(exitCode);
 	}
 }

@@ -39,7 +39,7 @@ public class BMIPBERTDocumentNotRelevantAnnotator extends JCasAnnotator_ImplBase
 		// Remove all pathogen mentions if document classified as not relevant
 		System.out.println("Predicted " + prediction);
 
-		if (prediction < 0.3) {
+		if (prediction < 0.005) {
 			new ArrayList<NamedEntityMention>(JCasUtil.select(jCas, NamedEntityMention.class)).stream()
 					// Remove only NCBI annotations
 					.filter(e -> e.getMentionType().contentEquals("pathogen") && e.getMentionId().startsWith("ncbi-"))

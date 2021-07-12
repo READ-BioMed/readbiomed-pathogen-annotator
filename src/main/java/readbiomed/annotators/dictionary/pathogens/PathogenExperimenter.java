@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -23,12 +25,15 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
-import readbiomed.annotators.dictionary.utils.CharacterizationEvaluation;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
 
-public class PathogenExperimenter {
+@Command(name = "PathogenExperimenter", mixinStandardHelpOptions = true, version = "PathogenExperimenter 0.1", description = "Pathogen experimenter.")
+public class PathogenExperimenter implements Callable<Integer> {
 
-	private static Map<String, Set<String>> annotate(String dictFileName)
+	private static Map<String, Set<String>> annotate(String dictFileName, String textFolderName)
 			throws UIMAException, IOException, URISyntaxException, SAXException {
 		Map<String, Set<String>> prediction = new HashMap<>();
 
@@ -37,9 +42,7 @@ public class PathogenExperimenter {
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(builder.createAggregateDescription());
 
 		// Annotate and read the annotations
-		for (File file : FileUtils.listFiles(new File(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format"),
-				new TextFileFilter(), null)) {
+		for (File file : FileUtils.listFiles(new File(textFolderName), new TextFileFilter(), null)) {
 			String fileName = file.getName().replaceAll(".txt$", "");
 
 			JCas jCas = JCasFactory.createText(Files.readString(file.toPath()));
@@ -59,16 +62,38 @@ public class PathogenExperimenter {
 
 	}
 
-	public static void main(String[] argc) throws UIMAException, IOException, URISyntaxException, SAXException {
-		String dictFileName = "file:/home/antonio/Documents/UoM/dictionaries/dict.xml";
+	@Parameters(index = "0", description = "Dictionary file name.", defaultValue = "file:/home/antonio/Documents/UoM/dictionaries/dict.xml")
+	private String dictFileName;
 
-		Map<String, Set<String>> gt = CharacterizationEvaluation.getGT(
-				"/home/antonio/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv");
+	@Parameters(index = "1", description = "Ground truth file name.", defaultValue = "/home/antonio/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv")
+	private String gtFileName;
+
+	@Parameters(index = "2", description = "Text folder name.", defaultValue = "/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/corpora/bmip-pubmed-corpus/articles-txt-format")
+	private String textFolderName;
+
+	public static Map<String, Set<String>> getGT(String fileName, String textFolderName) throws IOException {
+		Map<String, Set<String>> gt = new HashMap<>();
+
+		FileUtils.listFiles(new File(textFolderName), new TextFileFilter(), null).stream()
+				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
+
+		// Read CSV. The first line is skipped
+		Files.lines(Paths.get(fileName)).map(line -> line.split(",")).skip(1).filter(e -> e.length == 5).forEach(e -> {
+			gt.putIfAbsent(e[0], new HashSet<>());
+			gt.get(e[0]).add(e[4]);
+		});
+
+		return gt;
+	}
+
+	@Override
+	public Integer call() throws Exception {
+		Map<String, Set<String>> gt = getGT(gtFileName, textFolderName);
 
 		System.out.println(gt.size());
 		System.out.println(gt);
 
-		Map<String, Set<String>> predictions = annotate(dictFileName);
+		Map<String, Set<String>> predictions = annotate(dictFileName, textFolderName);
 
 		double tps = 0.0;
 		double fns = 0.0;
@@ -109,5 +134,11 @@ public class PathogenExperimenter {
 		System.out.println("Overall recall: " + recalls);
 		System.out.println("Overall precision: " + precisions);
 		System.out.println("Overall f1: " + f1s);
+		return 0;
+	}
+
+	public static void main(String[] argc) throws UIMAException, IOException, URISyntaxException, SAXException {
+		int exitCode = new CommandLine(new PathogenExperimenter()).execute(argc);
+		System.exit(exitCode);
 	}
 }

@@ -1,41 +1,25 @@
 package readbiomed.annotators.dictionary.utils;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 
-public class CharacterizationEvaluation {
+@Command(name = "CharacterizationEvaluation", mixinStandardHelpOptions = true, version = "CharacterizationEvaluation 0.1", description = "Pathogen characterization experimenter.")
+public class CharacterizationEvaluation implements Callable<Integer> {
 
 	private static final Pattern p = Pattern.compile(",");
 
-	public static Map<String, Set<String>> getGT(String fileName) throws IOException {
-		Map<String, Set<String>> gt = new HashMap<>();
-
-		FileUtils.listFiles(new File(
-				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/articles-txt-format"),
-				new TextFileFilter(), null).stream()
-				.forEach(e -> gt.put(e.getName().replace(".txt", ""), new HashSet<>()));
-
-		// Read CSV. The first line is skipped
-		Files.lines(Paths.get(fileName)).map(line -> line.split(",")).skip(1).filter(e -> e.length == 5).forEach(e -> {
-			gt.putIfAbsent(e[0], new HashSet<>());
-			gt.get(e[0]).add(e[4]);
-		});
-
-		return gt;
-	}
-	
 	public static Map<String, Set<String>> getGroundTruth(String fileName) throws FileNotFoundException, IOException {
 		Map<String, Set<String>> mappings = new HashMap<>();
 
@@ -106,7 +90,7 @@ public class CharacterizationEvaluation {
 				if (prediction.get(entry.getKey()) != null && prediction.get(entry.getKey()).contains(s)) {
 					truePositives++;
 				} else {
-					//System.err.println("Missed PMID:" + entry.getKey() + " Tax Id:" + s);
+					// System.err.println("Missed PMID:" + entry.getKey() + " Tax Id:" + s);
 				}
 			}
 		}
@@ -123,10 +107,19 @@ public class CharacterizationEvaluation {
 		System.out.println("F1:        " + f1);
 	}
 
-	public static void main(String[] argc) throws FileNotFoundException, IOException {
-		evaluate(getGroundTruth(
-				"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv"),
-				getConcepMapper(
-						"/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pmib_taxon_sdt_labels.csv"));
+	@Parameters(index = "0", description = "Grount truth file name.", defaultValue = "/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pubmed-pathogen-characerization-annotations.csv")
+	private String gtFileName;
+	@Parameters(index = "1", description = "SDT labels file name.", defaultValue = "/home/antonio/Downloads/bmip/readbiomed-bmip-8648708be55b/data/annotations/pmib_taxon_sdt_labels.csv")
+	private String sdtLabelsFileName;
+
+	@Override
+	public Integer call() throws Exception {
+		evaluate(getGroundTruth(gtFileName), getConcepMapper(sdtLabelsFileName));
+		return 0;
+	}
+
+	public static void main(String[] argc) {
+		int exitCode = new CommandLine(new CharacterizationEvaluation()).execute(argc);
+		System.exit(exitCode);
 	}
 }

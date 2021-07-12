@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.Callable;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -17,15 +18,22 @@ import org.cleartk.opennlp.tools.SentenceAnnotator;
 import org.cleartk.token.type.Sentence;
 import org.cleartk.util.ViewUriUtil;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.document.Section;
 import readbiomed.readers.medline.MedlineReader;
 
-public class GenerateLineFiles {
+@Command(name = "GenerateLineFiles", mixinStandardHelpOptions = true, version = "GenerateLineFiles 0.1", description = "SDT line generation.")
+public class GenerateLineFiles implements Callable<Integer> {
 
-	public static void main(String[] argc) throws UIMAException, FileNotFoundException, CASAdminException, IOException {
-		String inputFolderName = argc[0];
-		String outputFolderName = argc[1];
+	@Parameters(index = "0", description = "Input data folder name.")
+	private String inputFolderName;
+	@Parameters(index = "1", description = "Output folder name.")
+	private String outputFolderName;
 
+	@Override
+	public Integer call() throws Exception {
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(SentenceAnnotator.getDescription());
 
 		JCas jCas = JCasFactory.createJCas();
@@ -64,5 +72,11 @@ public class GenerateLineFiles {
 				jCas.reset();
 			}
 		}
+		return 0;
+	}
+
+	public static void main(String[] argc) throws UIMAException, FileNotFoundException, CASAdminException, IOException {
+		int exitCode = new CommandLine(new GenerateLineFiles()).execute(argc);
+		System.exit(exitCode);
 	}
 }

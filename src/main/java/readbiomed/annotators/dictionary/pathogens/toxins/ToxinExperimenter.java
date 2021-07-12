@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.uima.analysis_engine.AnalysisEngine;
@@ -16,10 +17,14 @@ import org.apache.uima.jcas.JCas;
 import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.bmip.dataset.toxins.ToxinBuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
-public class ToxinExperimenter {
+@Command(name = "ToxinExperimenter", mixinStandardHelpOptions = true, version = "ToxinExperimenter 0.1", description = "Toxin experimenter.")
+public class ToxinExperimenter implements Callable<Integer> {
 
 	public static Map<String, Set<String>> annotateNCBISet(String dictURI, String folderName) throws Exception {
 		Map<String, Set<String>> prediction = new HashMap<>();
@@ -41,8 +46,8 @@ public class ToxinExperimenter {
 
 					String pmid = ViewUriUtil.getURI(jCas).toString();
 
-					JCasUtil.select(jCas, NamedEntityMention.class).forEach(e -> prediction
-							.computeIfAbsent(e.getMentionId(), o -> new HashSet<String>()).add(pmid));
+					JCasUtil.select(jCas, NamedEntityMention.class).forEach(
+							e -> prediction.computeIfAbsent(e.getMentionId(), o -> new HashSet<String>()).add(pmid));
 
 					jCas.reset();
 				}
@@ -54,15 +59,20 @@ public class ToxinExperimenter {
 		return prediction;
 	}
 
-	public static void main(String[] argc) throws Exception {
-		String dictFileName = "file:/home/antonio/Documents/UoM/toxin-dict.xml";
-		String folderName = "/home/antonio/Documents/UoM/toxin-ncbi-data/PubMed";
+	@Parameters(index = "0", description = "Toxin dictionary file name.", defaultValue = "file:/home/antonio/Documents/UoM/toxin-dict.xml")
+	private String dictFileName;
+	@Parameters(index = "1", description = "Output folder name.", defaultValue = "/home/antonio/Documents/UoM/toxin-ncbi-data/PubMed")
+	private String outputFolderName;
+	@Parameters(index = "2", description = "NCBI pathogen folder name.", defaultValue = "/home/antonio/Documents/UoM/toxin-ncbi-data")
+	private String toxinNCBIDataFolderName;
 
-		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName, folderName);
+	@Override
+	public Integer call() throws Exception {
+		Map<String, Set<String>> predictions = annotateNCBISet(dictFileName, outputFolderName);
 
 		predictions.entrySet().stream().forEach(e -> System.out.println(e.getKey() + " " + e.getValue().size()));
 
-		Map<String, Set<String>> gt = ToxinBuildDataset.readToxinEntries("/home/antonio/Documents/UoM/toxin-ncbi-data");
+		Map<String, Set<String>> gt = ToxinBuildDataset.readToxinEntries(toxinNCBIDataFolderName);
 
 		// Compare GT
 		for (Map.Entry<String, Set<String>> entry : gt.entrySet()) {
@@ -91,5 +101,11 @@ public class ToxinExperimenter {
 				System.out.println("FN:" + fn);
 			}
 		}
+		return 0;
+	}
+
+	public static void main(String[] argc) throws Exception {
+		int exitCode = new CommandLine(new ToxinExperimenter()).execute(argc);
+		System.exit(exitCode);
 	}
 }

@@ -55,7 +55,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "<h1>Running Flask!</h1>"
+    return "<h1>Running BERT on Flask!</h1>"
 
 @app.route("/predict", methods = ['POST', 'GET'])
 def predictCall():

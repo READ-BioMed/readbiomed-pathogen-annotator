@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -23,10 +24,13 @@ import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 import org.xml.sax.SAXException;
 
-import readbiomed.annotators.dictionary.utils.CharacterizationEvaluation;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
 
-public class PathogenExperimenter {
+@Command(name = "PathogenExperimenter", mixinStandardHelpOptions = true, version = "PathogenExperimenter 0.1", description = "Experiments for pathogen characterization.")
+public class PathogenExperimenter implements Callable<Integer> {
 
 	private static void evaluate(Map<String, Set<String>> gt, Map<String, Set<String>> predictions) {
 		double tps = 0.0;
@@ -70,13 +74,16 @@ public class PathogenExperimenter {
 		System.out.println("Overall f1: " + f1s);
 	}
 
-	public static void main(String[] argc) throws IOException, SAXException, UIMAException, URISyntaxException {
-		//String inputFolderName = argc[0];
-		String dictionaryFileName = "file:/Users/ajimeno/Documents/UoM/dictionaries/dict.xml";
-		//String SDTPredictionFolderName = argc[2];
+	@Parameters(index = "0", description = "Dictionary file name.", defaultValue = "file:/Users/ajimeno/Documents/UoM/dictionaries/dict.xml")
+	private String dictionaryFileName;
+	@Parameters(index = "1", description = "Ground truth file name.", defaultValue = "/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv")
+	private String gtFileName;
+	@Parameters(index = "2", description = "Articles text folder name.", defaultValue = "/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/articles-txt-format")
+	private String textFolderName;
 
-		Map<String, Set<String>> gt = CharacterizationEvaluation.getGT(
-				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/ground-truth/manual-annotation-gt.csv");
+	@Override
+	public Integer call() throws Exception {
+		Map<String, Set<String>> gt = readbiomed.annotators.dictionary.pathogens.PathogenExperimenter.getGT(gtFileName, textFolderName);
 
 		Map<String, Set<String>> predictions = new HashMap<>();
 
@@ -86,9 +93,7 @@ public class PathogenExperimenter {
 
 		AnalysisEngine ae = AnalysisEngineFactory.createEngine(pa.createAggregateDescription());
 
-		for (File file : FileUtils.listFiles(new File(
-				"/Users/ajimeno/Documents/git/readbiomed-bmip-datasets/manual-set/articles-txt-format"),
-				new TextFileFilter(), null)) {
+		for (File file : FileUtils.listFiles(new File(textFolderName), new TextFileFilter(), null)) {
 			String fileName = file.getName().replaceAll(".txt$", "");
 
 			JCas jCas = JCasFactory.createText(Files.readString(file.toPath()));
@@ -103,5 +108,11 @@ public class PathogenExperimenter {
 		}
 
 		evaluate(gt, predictions);
+		return 0;
+	}
+
+	public static void main(String[] argc) throws IOException, SAXException, UIMAException, URISyntaxException {
+		int exitCode = new CommandLine(new PathogenExperimenter()).execute(argc);
+		System.exit(exitCode);
 	}
 }
