@@ -68,6 +68,7 @@ public class RelevantPathogenSet implements Callable<Integer> {
 		try (PrintWriter w = new PrintWriter(new FileWriter(new File(inputFolderName, "dataset.pipe")))) {
 			for (File file : new File(inputFolderName, "PubMed").listFiles()) {
 				if (file.getName().endsWith(".gz")) {
+					System.err.println(file.getName());
 					JCasCollectionReader_ImplBase cr = (JCasCollectionReader_ImplBase) org.apache.uima.fit.factory.CollectionReaderFactory
 							.createReader(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()));
 
@@ -109,7 +110,7 @@ public class RelevantPathogenSet implements Callable<Integer> {
 
 						Collections.sort(list, new RelevantPathogenSet().new SortNamedEntityMentions());
 
-						for (String id : ids) {
+						ids.stream().filter(id -> id.startsWith("ncbi-")).forEach(id -> {
 							Set<String> pmidsNCBI = mapNCBI.get(id);
 
 							// The pathogen should exist in our set
@@ -134,7 +135,7 @@ public class RelevantPathogenSet implements Callable<Integer> {
 								w.println(pmid + "|" + text.replaceAll("\\|", " ").replaceAll("\n", " ").trim() + "|"
 										+ category);
 							}
-						}
+						});
 
 						jCas.reset();
 					}
