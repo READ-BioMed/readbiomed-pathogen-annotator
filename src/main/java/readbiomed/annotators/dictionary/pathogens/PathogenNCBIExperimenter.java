@@ -244,7 +244,7 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 
 					JCasUtil.select(jCas, DictTerm.class)
 							.forEach(e -> prediction
-									.computeIfAbsent(e.getDictCanon().replaceAll("ncbi-", "pathogen-").toLowerCase(),
+									.computeIfAbsent(e.getDictCanon().toLowerCase(),
 											o -> new HashSet<String>())
 									.add(pmid));
 
