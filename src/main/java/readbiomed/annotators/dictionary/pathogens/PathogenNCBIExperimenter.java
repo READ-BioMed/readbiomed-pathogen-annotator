@@ -379,7 +379,7 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 			}
 		}
 
-		System.exit(-1);
+		//System.exit(-1);
 
 		for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
 			DocumentEntry de = documentMap.get(prediction.getKey());
