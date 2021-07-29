@@ -146,6 +146,12 @@
 			<groupId>edu.ucdenver.ccp</groupId>
 			<artifactId>nlp-pipelines-conceptmapper</artifactId>
 			<version>0.5.4</version>
+			<exclusions>
+				<exclusion>
+					<groupId>stax</groupId>
+					<artifactId>stax-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>au.com.nicta.csp</groupId>
