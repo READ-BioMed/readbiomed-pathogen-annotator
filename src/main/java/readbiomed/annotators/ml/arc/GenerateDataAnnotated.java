@@ -77,6 +77,9 @@ public class GenerateDataAnnotated implements Callable<Integer> {
 			w.write("focus");
 			w.newLine();
 
+			// Remove header line
+			b.readLine();
+
 			// Annotate and read the annotations
 			for (String line; (line = b.readLine()) != null;) {
 				String[] tokens = p.split(line);
