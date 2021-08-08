@@ -9,10 +9,9 @@ import argparse
 import torch.nn as nn
 import math
 
-from transformers import BigBirdPegasusForSequenceClassification
-from transformers import BertForSequenceClassification, AdamW, BertConfig
+from transformers import LongformerTokenizer, LongformerForSequenceClassification
+from transformers import AdamW, BertConfig
 from transformers import get_linear_schedule_with_warmup
-from transformers import BertTokenizer
 
 from sklearn.model_selection import train_test_split
 
@@ -21,15 +20,13 @@ import pandas as pd
 from torch.utils.data import TensorDataset, random_split
 from sklearn.model_selection import train_test_split
 
-from transformers import AutoModel, AutoTokenizer
-
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 
 from constants import model_name, device, max_len, model_file
 from torch.utils import mkldnn as mkldnn_utils
 
 # The outcome is a trained classifier
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = LongformerTokenizer.from_pretrained(model_name)
 
 def encode(sentences):
     input_ids = []
@@ -86,6 +83,8 @@ def read_file(file_name):
     return text, label
 
 print ("Reading files", flush=True)
+#train_text, train_labels = read_file('train.set.pipe')
+#val_text, val_labels = read_file('val.set.pipe')
 train_text, train_labels = read_file('train.prep.pipe')
 val_text, val_labels = read_file('test.prep.pipe')
 
@@ -99,7 +98,7 @@ train_dataset = TensorDataset(train_input_ids, train_attention_masks, torch.tens
 val_dataset = TensorDataset(val_input_ids, val_attention_masks, torch.tensor(val_labels))
 
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-batch_size = 8 
+batch_size = 2 
 train_dataloader = DataLoader(
         train_dataset,  # The training samples.
         sampler=RandomSampler(train_dataset),  # Select batches randomly
@@ -140,13 +139,9 @@ def f1_calc(preds, labels):
 
 def train():
     ## Create model
-    model = BertForSequenceClassification.from_pretrained(
+    model = LongformerForSequenceClassification.from_pretrained(
         model_name,
         num_labels=2,
-        output_attentions=False,
-        output_hidden_states=False#,
-        #block_size=16,
-        #num_random_blocks=2
     )
 
     print (model)
@@ -207,7 +202,7 @@ def train():
 
             # Forward pass
             output = model(input_ids=b_input_ids,
-                            #token_type_ids=None,
+                            token_type_ids=None,
                             attention_mask=b_input_mask,
                             labels=b_labels)
             
@@ -219,7 +214,7 @@ def train():
 
             # Clip the norm of the gradients to 1.0.
             # This is to help prevent the "exploding gradients" problem.
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            #torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
             # Update parameters and take a step using the computed gradient.
             # The optimizer dictates the "update rule"--how the parameters are
