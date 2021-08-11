@@ -291,7 +291,7 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 		return folds;
 	}
 
-	@Parameters(index = "0", description = "PrPSc dictionary file name.", defaultValue = "file:/Users/ajimeno/Documents/UoM/ncbi-dict.xml")
+	@Parameters(index = "0", description = "Dictionary file name.", defaultValue = "file:/Users/ajimeno/Documents/UoM/ncbi-dict.xml")
 	private String dictFileName;
 	@Parameters(index = "1", description = "Data folder name.", defaultValue = "/User/ajimeno/Documents/UoM/documents/PubMed")
 	private String dataFolderName;
