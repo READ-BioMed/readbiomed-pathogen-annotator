@@ -121,15 +121,19 @@ public class DictionaryBuilder extends DefaultHandler implements Callable<Intege
 
 			// Remove subtype to identify specific pathogen names
 			if (term.contains("subtype")) {
-				xmlWriter.writeStartElement("variant");
-				xmlWriter.writeAttribute("base", term.replaceAll("subtype", "").trim());
-				xmlWriter.writeEndElement();
+				if (term.replaceAll("subtype", "").trim().length() > 3) {
+					xmlWriter.writeStartElement("variant");
+					xmlWriter.writeAttribute("base", term.replaceAll("subtype", "").trim());
+					xmlWriter.writeEndElement();
+				}
 			}
 
 			if (term.endsWith(" virus")) {
-				xmlWriter.writeStartElement("variant");
-				xmlWriter.writeAttribute("base", term.replaceAll(" virus$", "").trim());
-				xmlWriter.writeEndElement();
+				if (term.replaceAll(" virus$", "").trim().length() > 3) {
+					xmlWriter.writeStartElement("variant");
+					xmlWriter.writeAttribute("base", term.replaceAll(" virus$", "").trim());
+					xmlWriter.writeEndElement();
+				}
 			}
 		}
 	}

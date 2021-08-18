@@ -242,11 +242,8 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 
 					String pmid = ViewUriUtil.getURI(jCas).toString();
 
-					JCasUtil.select(jCas, DictTerm.class)
-							.forEach(e -> prediction
-									.computeIfAbsent(e.getDictCanon().toLowerCase(),
-											o -> new HashSet<String>())
-									.add(pmid));
+					JCasUtil.select(jCas, DictTerm.class).forEach(e -> prediction
+							.computeIfAbsent(e.getDictCanon().toLowerCase(), o -> new HashSet<String>()).add(pmid));
 
 					jCas.reset();
 				}
@@ -379,39 +376,30 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 			}
 		}
 
-		//System.exit(-1);
-
-		for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
-			DocumentEntry de = documentMap.get(prediction.getKey());
-			System.out.println(prediction.getKey());
-
-			Set<String> fp = new HashSet<>(prediction.getValue());
-
-			if (de != null) { // What has not been matched from MeSH?
-				for (String taxon : de.getMeSHTaxon()) {
-					fp.remove(taxon);
-					if (!prediction.getValue().contains(taxon)) {
-						System.out.println("Missed MeSH " + prediction.getKey() + "/" + taxon);
-					} else {
-						System.out.println("Found MeSH " + prediction.getKey() + "/" + taxon);
-					}
-				}
-
-				// What has not been matched from GeneBank?
-				for (String taxon : de.getGeneBankTaxon()) {
-					fp.remove(taxon);
-					if (!prediction.getValue().contains(taxon)) {
-						System.out.println("Missed GeneBank " + prediction.getKey() + "/" + taxon);
-					} else {
-						System.out.println("Found GeneBank " + prediction.getKey() + "/" + taxon);
-					}
-				}
-			}
-
-			for (String taxon : fp) {
-				System.out.println("Potential FP " + prediction.getKey() + "/" + taxon);
-			}
-		}
+		// System.exit(-1);
+		/*
+		 * for (Map.Entry<String, Set<String>> prediction : predictions.entrySet()) {
+		 * DocumentEntry de = documentMap.get(prediction.getKey());
+		 * System.out.println(prediction.getKey());
+		 * 
+		 * Set<String> fp = new HashSet<>(prediction.getValue());
+		 * 
+		 * if (de != null) { // What has not been matched from MeSH? for (String taxon :
+		 * de.getMeSHTaxon()) { fp.remove(taxon); if
+		 * (!prediction.getValue().contains(taxon)) { System.out.println("Missed MeSH "
+		 * + prediction.getKey() + "/" + taxon); } else {
+		 * System.out.println("Found MeSH " + prediction.getKey() + "/" + taxon); } }
+		 * 
+		 * // What has not been matched from GeneBank? for (String taxon :
+		 * de.getGeneBankTaxon()) { fp.remove(taxon); if
+		 * (!prediction.getValue().contains(taxon)) {
+		 * System.out.println("Missed GeneBank " + prediction.getKey() + "/" + taxon); }
+		 * else { System.out.println("Found GeneBank " + prediction.getKey() + "/" +
+		 * taxon); } } }
+		 * 
+		 * for (String taxon : fp) { System.out.println("Potential FP " +
+		 * prediction.getKey() + "/" + taxon); } }
+		 */
 
 		/*
 		 * for (Map<String, Set<String>>[] sets : getFolds(gt)) { Map<String,
