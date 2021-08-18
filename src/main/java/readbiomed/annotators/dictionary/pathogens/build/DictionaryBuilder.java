@@ -125,6 +125,12 @@ public class DictionaryBuilder extends DefaultHandler implements Callable<Intege
 				xmlWriter.writeAttribute("base", term.replaceAll("subtype", "").trim());
 				xmlWriter.writeEndElement();
 			}
+
+			if (term.endsWith(" virus")) {
+				xmlWriter.writeStartElement("variant");
+				xmlWriter.writeAttribute("base", term.replaceAll(" virus$", "").trim());
+				xmlWriter.writeEndElement();
+			}
 		}
 	}
 
@@ -200,11 +206,11 @@ public class DictionaryBuilder extends DefaultHandler implements Callable<Intege
 		}
 	}
 
-	@Parameters(index = "0", description = "NCBI taxonomy file name.", defaultValue = "/home/antonio/Documents/UoM/ncbitaxon.owl.gz")
+	@Parameters(index = "0", description = "NCBI taxonomy file name.", defaultValue = "/Users/ajimeno/Documents/UoM/ncbitaxon.owl.gz")
 	private String NCBITaxonomyFileName;
-	@Parameters(index = "1", description = "Output dictionary file name.", defaultValue = "/home/antonio/Documents/UoM/dict.xml")
+	@Parameters(index = "1", description = "Output dictionary file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dict.xml")
 	private String outputDictionaryFileName;
-	@Parameters(index = "2", description = "NCBI pathogen file name.", defaultValue = "/home/antonio/Documents/UoM/ncbi-pathogens.txt")
+	@Parameters(index = "2", description = "NCBI pathogen file name.", defaultValue = "/Users/ajimeno/Documents/UoM/ncbi-pathogens.txt")
 	private String ncbiPathogenFileName;
 
 	@Override
