@@ -37,7 +37,8 @@ public class CheckTitlePMC implements Callable<Integer> {
 			b.readLine();
 			for (String line; (line = b.readLine()) != null;) {
 				String[] tokens = p.split(line);
-				map.put(tokens[1], tokens[0]);
+				if (tokens.length == 2)
+					map.put(tokens[1], tokens[0]);
 			}
 		}
 
