@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
 import org.apache.uima.UIMAException;
@@ -17,10 +18,14 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.cleartk.util.ViewUriUtil;
 
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
 import readbiomed.document.Section;
 import readbiomed.readers.medline.MedlineReader;
 
-public class CheckTitlePMC {
+@Command(name = "CheckTitlePMC", mixinStandardHelpOptions = true, version = "CheckTitlePMC 0.1", description = "CheckTitlePMC.")
+public class CheckTitlePMC implements Callable<Integer> {
 
 	private static final Pattern p = Pattern.compile(",");
 
@@ -39,17 +44,25 @@ public class CheckTitlePMC {
 		return map;
 	}
 
+	@Parameters(index = "0", description = "pmcid2pmid file name.", defaultValue = "/Users/ajimeno/Documents/UoM/pmcid2pmid.csv")
+	private String pmc2pmidFileName;
+	@Parameters(index = "1", description = "PubMed folder name.", defaultValue = "/Users/ajimeno/Documents/UoM/pathogens-ncbi/PubMed")
+	private String medlineFolderName;
+
 	public static void main(String[] argc) throws UIMAException, CASAdminException, IOException {
-		String pmc2pmidFileName = "/Users/ajimeno/Documents/UoM/pmcid2pmid.csv";
-		String medlineFolderName = "/Users/ajimeno/Documents/UoM/pathogens-ncbi/PubMed";
-		
-		Map <String, String> map = getPMID2PMC(pmc2pmidFileName);
+		int exitCode = new CommandLine(new CheckTitlePMC()).execute(argc);
+		System.exit(exitCode);
+	}
+
+	@Override
+	public Integer call() throws Exception {
+		Map<String, String> map = getPMID2PMC(pmc2pmidFileName);
 
 		JCas jCas = JCasFactory.createJCas();
 
 		for (File file : new File(medlineFolderName).listFiles()) {
 			if (file.getName().endsWith(".gz")) {
-				//System.out.println(file.getName());
+				// System.out.println(file.getName());
 
 				JCasCollectionReader_ImplBase cr = (JCasCollectionReader_ImplBase) org.apache.uima.fit.factory.CollectionReaderFactory
 						.createReader(MedlineReader.getDescriptionFromFiles(file.getAbsolutePath()));
@@ -64,7 +77,7 @@ public class CheckTitlePMC {
 							.count() > 0) {
 						hasAbstract = true;
 					}
-					
+
 					System.out.print(pmid);
 					System.out.print(",");
 					System.out.print(map.get(pmid));
@@ -76,5 +89,6 @@ public class CheckTitlePMC {
 				}
 			}
 		}
+		return 0;
 	}
 }
