@@ -15,17 +15,17 @@ public class PathogenCharacterizationAnnotator {
 		AggregateBuilder builder = new AggregateBuilder();
 		builder.add(PathogenDictionaryAnnotator.getPipeline(dictFileName).createAggregateDescription());
 
-		//builder.add(BMIPPathogenNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.gz",
+		//builder.add(PathogenNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.gz",
 		//		"/Users/ajimeno/Documents/MTI_ML/classifiers.gz",
 		//		"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c"));
 
-		builder.add(BMIPBERTPathogenNotRelevantAnnotator.getDescription("http://localhost:6000"));
+		//builder.add(BERTPathogenNotRelevantAnnotator.getDescription("http://localhost:5000"));
 
-		 builder.add(BMIPDocumentNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.excel.gz",
-		 "/Users/ajimeno/Documents/MTI_ML/classifiers.excel.gz",
-		 "gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c -t2"));
+		//builder.add(DocumentNotRelevantAnnotator.getDescription("/Users/ajimeno/Documents/MTI_ML/trie.excel.gz",
+		//		"/Users/ajimeno/Documents/MTI_ML/classifiers.excel.gz",
+		//		"gov.nih.nlm.nls.mti.featuresextractors.BinaryFeatureExtractor", "-l -n -c -t2"));
 
-		//builder.add(BMIPBERTDocumentNotRelevantAnnotator.getDescription("http://localhost:6000"));
+		 builder.add(BERTDocumentNotRelevantAnnotator.getDescription("http://localhost:5000"));
 		return builder;
 	}
 }

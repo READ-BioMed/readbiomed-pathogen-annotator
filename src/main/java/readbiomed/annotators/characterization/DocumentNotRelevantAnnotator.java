@@ -16,7 +16,7 @@ import gov.nih.nlm.nls.mti.documents.Document;
 import gov.nih.nlm.nls.mti.instances.Instance;
 import readbiomed.annotators.ml.mtiml.MTIMLAnnotator;
 
-public class BMIPDocumentNotRelevantAnnotator extends MTIMLAnnotator {
+public class DocumentNotRelevantAnnotator extends MTIMLAnnotator {
 
 	public void initialize(UimaContext context) throws ResourceInitializationException {
 		super.initialize(context);
@@ -48,7 +48,7 @@ public class BMIPDocumentNotRelevantAnnotator extends MTIMLAnnotator {
 	public static AnalysisEngineDescription getDescription(String trieFileName, String classifiersFileName,
 			String featureExtractorClassName, String featureExtractorParameters)
 			throws ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(BMIPDocumentNotRelevantAnnotator.class,
+		return AnalysisEngineFactory.createEngineDescription(DocumentNotRelevantAnnotator.class,
 				PARAM_TRIE_FILE_NAME, trieFileName, PARAM_CLASSIFIERS_FILE_NAME, classifiersFileName,
 				PARAM_FEATURE_EXTRACTOR_CLASS_NAME, featureExtractorClassName, PARAM_FEATURE_EXTRACTOR_PARAMETERS,
 				featureExtractorParameters);

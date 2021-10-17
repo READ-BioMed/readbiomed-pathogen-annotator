@@ -15,7 +15,7 @@ import org.cleartk.ne.type.NamedEntityMention;
 
 import readbiomed.annotators.ml.bert.BERTClient;
 
-public class BMIPBERTDocumentNotRelevantAnnotator extends JCasAnnotator_ImplBase {
+public class BERTDocumentNotRelevantAnnotator extends JCasAnnotator_ImplBase {
 
 	private static final String PARAM_BERT_SERVER_PREFIX = "PARAM_BERT_SERVER_PREFIX";
 
@@ -39,7 +39,7 @@ public class BMIPBERTDocumentNotRelevantAnnotator extends JCasAnnotator_ImplBase
 		// Remove all pathogen mentions if document classified as not relevant
 		System.out.println("Predicted " + prediction);
 
-		if (prediction < 0.005) {
+		if (prediction < 0.05) {
 			new ArrayList<NamedEntityMention>(JCasUtil.select(jCas, NamedEntityMention.class)).stream()
 					// Remove only NCBI annotations
 					.filter(e -> e.getMentionType().contentEquals("pathogen") && e.getMentionId().startsWith("ncbi-"))
@@ -49,7 +49,7 @@ public class BMIPBERTDocumentNotRelevantAnnotator extends JCasAnnotator_ImplBase
 
 	public static AnalysisEngineDescription getDescription(String bertServerPrefix)
 			throws ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(BMIPBERTDocumentNotRelevantAnnotator.class,
+		return AnalysisEngineFactory.createEngineDescription(BERTDocumentNotRelevantAnnotator.class,
 				PARAM_BERT_SERVER_PREFIX, bertServerPrefix);
 	}
 }

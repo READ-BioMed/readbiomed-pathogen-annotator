@@ -114,7 +114,8 @@ public class DictionaryBuilder extends DefaultHandler implements Callable<Intege
 		if (term.length() > 3 && !term.equalsIgnoreCase("unidentified subtype")
 				&& !term.toLowerCase().startsWith("influenza a virus (")
 				&& !term.toLowerCase().startsWith("influenza b virus (")
-				&& !term.toLowerCase().startsWith("influenza c virus (")) {
+				&& !term.toLowerCase().startsWith("influenza c virus (")
+				&& term.toLowerCase().replaceAll(" virus$", "").length() > 1) {
 			xmlWriter.writeStartElement("variant");
 			xmlWriter.writeAttribute("base", term);
 			xmlWriter.writeEndElement();
@@ -127,14 +128,14 @@ public class DictionaryBuilder extends DefaultHandler implements Callable<Intege
 					xmlWriter.writeEndElement();
 				}
 			}
-
+/*
 			if (term.endsWith(" virus")) {
 				if (term.replaceAll(" virus$", "").trim().length() > 3) {
 					xmlWriter.writeStartElement("variant");
 					xmlWriter.writeAttribute("base", term.replaceAll(" virus$", "").trim());
 					xmlWriter.writeEndElement();
 				}
-			}
+			}*/
 		}
 	}
 

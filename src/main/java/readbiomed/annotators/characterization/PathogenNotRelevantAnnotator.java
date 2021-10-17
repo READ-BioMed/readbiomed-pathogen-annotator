@@ -1,6 +1,5 @@
 package readbiomed.annotators.characterization;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,7 +9,6 @@ import java.util.Set;
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
-import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
 import org.apache.uima.fit.factory.AnalysisEngineFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -18,18 +16,14 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.cleartk.ne.type.NamedEntityMention;
 import org.cleartk.util.ViewUriUtil;
 
-import readbiomed.annotators.ml.bert.BERTClient;
+import gov.nih.nlm.nls.mti.documents.Document;
+import gov.nih.nlm.nls.mti.instances.Instance;
+import readbiomed.annotators.ml.mtiml.MTIMLAnnotator;
 
-public class BMIPBERTPathogenNotRelevantAnnotator extends JCasAnnotator_ImplBase {
+public class PathogenNotRelevantAnnotator extends MTIMLAnnotator {
 
-	private static final String PARAM_BERT_SERVER_PREFIX = "PARAM_BERT_SERVER_PREFIX";
-
-	private BERTClient bert = null;
-	
 	public void initialize(UimaContext context) throws ResourceInitializationException {
 		super.initialize(context);
-		String bertServerPrefix = (String) context.getConfigParameterValue(PARAM_BERT_SERVER_PREFIX);
-        bert = new BERTClient(bertServerPrefix);
 	}
 
 	@Override
@@ -79,20 +73,18 @@ public class BMIPBERTPathogenNotRelevantAnnotator extends JCasAnnotator_ImplBase
 					}
 				}
 			}
-			
-			Double prediction;
-			try {
-				prediction = bert.predict(text);
-			} catch (IOException e1) {
-				throw new AnalysisEngineProcessException(e1);
-			}
+
+			Document d = new Document();
+			d.addField("TEXT", text);
+
+			Instance i = getFeatureExtractor().prepareInstance(d);
 
 			System.out.println("Predicted "
-					+ prediction
+					+ ((readbiomed.mme.classifiers.SGD) getClassifier()).predictProbability(i).getConfidence()
 					+ " for " + id);
 			// Remove all pathogen mentions if document classified as not relevant and it is
 			// an NCBI pathogen
-			if (prediction < 0.9) {
+			if (((readbiomed.mme.classifiers.SGD) getClassifier()).predictProbability(i).getConfidence() < 0.5) {
 				new ArrayList<NamedEntityMention>(JCasUtil.select(jCas, NamedEntityMention.class)).stream()
 						.filter(e -> e.getMentionId().equals(id) && e.getMentionId().startsWith("ncbi"))
 						.forEach(ne -> ne.removeFromIndexes());
@@ -101,9 +93,12 @@ public class BMIPBERTPathogenNotRelevantAnnotator extends JCasAnnotator_ImplBase
 		}
 	}
 
-	public static AnalysisEngineDescription getDescription(String bertServerPrefix)
+	public static AnalysisEngineDescription getDescription(String trieFileName, String classifiersFileName,
+			String featureExtractorClassName, String featureExtractorParameters)
 			throws ResourceInitializationException {
-		return AnalysisEngineFactory.createEngineDescription(BMIPBERTPathogenNotRelevantAnnotator.class,
-				PARAM_BERT_SERVER_PREFIX, bertServerPrefix);
+		return AnalysisEngineFactory.createEngineDescription(PathogenNotRelevantAnnotator.class,
+				PARAM_TRIE_FILE_NAME, trieFileName, PARAM_CLASSIFIERS_FILE_NAME, classifiersFileName,
+				PARAM_FEATURE_EXTRACTOR_CLASS_NAME, featureExtractorClassName, PARAM_FEATURE_EXTRACTOR_PARAMETERS,
+				featureExtractorParameters);
 	}
 }
