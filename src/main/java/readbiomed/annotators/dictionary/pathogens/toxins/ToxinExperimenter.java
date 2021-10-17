@@ -20,7 +20,7 @@ import org.cleartk.util.ViewUriUtil;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import readbiomed.bmip.dataset.toxins.ToxinBuildDataset;
+import readbiomed.pathogens.dataset.toxins.ToxinBuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
 @Command(name = "ToxinExperimenter", mixinStandardHelpOptions = true, version = "ToxinExperimenter 0.1", description = "Toxin experimenter.")

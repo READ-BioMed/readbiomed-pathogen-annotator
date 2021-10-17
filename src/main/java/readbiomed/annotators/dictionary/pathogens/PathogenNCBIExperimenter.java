@@ -46,8 +46,8 @@ import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.Serialization;
 import readbiomed.annotators.dictionary.utils.TextFileFilter;
-import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
-import readbiomed.bmip.dataset.NCBITaxonomy.DocumentEntry;
+import readbiomed.pathogens.dataset.NCBITaxonomy.BuildDataset;
+import readbiomed.pathogens.dataset.NCBITaxonomy.DocumentEntry;
 import readbiomed.readers.medline.MedlineReader;
 import uima.tt.TokenAnnotation;
 

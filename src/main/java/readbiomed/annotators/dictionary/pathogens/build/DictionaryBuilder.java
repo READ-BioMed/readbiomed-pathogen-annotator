@@ -29,7 +29,7 @@ import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import readbiomed.bmip.dataset.PrPSc.PrPScDocuments;
+import readbiomed.pathogens.dataset.PrPSc.PrPScDocuments;
 
 @Command(name = "DictionaryBuilder", mixinStandardHelpOptions = true, version = "DictionaryBuilder 0.1", description = "Build pathogen dictionary based on the NCBI taxonomy data set.")
 public class DictionaryBuilder extends DefaultHandler implements Callable<Integer> {

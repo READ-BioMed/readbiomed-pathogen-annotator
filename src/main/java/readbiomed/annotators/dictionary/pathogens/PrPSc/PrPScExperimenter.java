@@ -27,7 +27,7 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.utils.ConceptMapperFactory;
 import readbiomed.annotators.dictionary.utils.Serialization;
-import readbiomed.bmip.dataset.PrPSc.PrPScBuildDataset;
+import readbiomed.pathogens.dataset.PrPSc.PrPScBuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
 @Command(name = "PrPScExperimenter", mixinStandardHelpOptions = true, version = "PrPScExperimenter 0.1", description = "PrPSc experimenter.")

@@ -31,7 +31,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import readbiomed.annotators.dictionary.pathogens.PathogenDictionaryAnnotator;
-import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
+import readbiomed.pathogens.dataset.NCBITaxonomy.BuildDataset;
 import readbiomed.readers.medline.MedlineReader;
 
 /**

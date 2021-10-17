@@ -14,7 +14,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.cleartk.ne.type.NamedEntityMention;
 
-import readbiomed.bmip.dataset.toxins.ToxinDocuments;
+import readbiomed.pathogens.dataset.toxins.ToxinDocuments;
 
 public class ToxinRegexAnnotator extends JCasAnnotator_ImplBase {
 

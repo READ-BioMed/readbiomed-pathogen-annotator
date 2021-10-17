@@ -22,11 +22,11 @@ import org.cleartk.util.ViewUriUtil;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import readbiomed.bmip.dataset.NCBITaxonomy.BuildDataset;
-import readbiomed.bmip.dataset.PrPSc.PrPScBuildDataset;
-import readbiomed.bmip.dataset.toxins.ToxinBuildDataset;
-import readbiomed.bmip.dataset.utils.Utils;
 import readbiomed.document.Section;
+import readbiomed.pathogens.dataset.NCBITaxonomy.BuildDataset;
+import readbiomed.pathogens.dataset.PrPSc.PrPScBuildDataset;
+import readbiomed.pathogens.dataset.toxins.ToxinBuildDataset;
+import readbiomed.pathogens.dataset.utils.Utils;
 import readbiomed.readers.medline.MedlineReader;
 
 @Command(name = "RandomPMIDSet", mixinStandardHelpOptions = true, version = "RandomPMIDSet 0.1", description = "Generate random PMID set.")
