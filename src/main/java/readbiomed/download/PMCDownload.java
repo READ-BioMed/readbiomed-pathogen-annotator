@@ -15,7 +15,6 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
-import readbiomed.annotators.dictionary.pathogens.PathogenNCBIExperimenter;
 import readbiomed.pathogens.dataset.utils.Utils;
 
 @Command(name = "PMCDownload", mixinStandardHelpOptions = true, version = "PMCDownload 0.1", description = "PMCDownload")
