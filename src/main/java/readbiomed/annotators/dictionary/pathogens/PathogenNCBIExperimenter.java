@@ -299,7 +299,7 @@ public class PathogenNCBIExperimenter extends CleartkAnnotator<String> implement
 	public Integer call() throws Exception {
 		Map<String, String> rootTaxonomyMapping = BuildDataset.readRootTaxonomyMapping(NCBIDataFolderName);
 
-		System.out.println("Unique tanonomy entries: " + rootTaxonomyMapping.size());
+		System.out.println("Unique taxonomy entries: " + rootTaxonomyMapping.size());
 
 		Map<String, DocumentEntry> documentMap = BuildDataset.readDocumentEntries(NCBIDataFolderName);
 
