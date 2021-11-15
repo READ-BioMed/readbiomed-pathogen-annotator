@@ -1,8 +1,10 @@
 package readbiomed.annotators.discourse.sdt;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
@@ -24,6 +26,8 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
 	private String inputFileName;
+	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.csv")
+	private String outputFileName;
 
 	private static Map<String, Integer> getHeaders(String fileName) throws FileNotFoundException, IOException {
 		Map<String, Integer> tagCount = new HashMap<>();
@@ -67,53 +71,69 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 		// Read headers
 		Map<String, Integer> headers = getHeaders(inputFileName);
 
-		// Print header
-		headers.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(e -> {
-			System.out.print(e.getKey());
-			System.out.print(",");
-		});
-		System.out.println("focus");
+		try (BufferedWriter w = new BufferedWriter(new FileWriter(outputFileName))) {
+			// Print header
+			w.write("key,");
+			
+			headers.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(e -> {
+				try {
+					w.write(e.getKey());
+					w.write(",");
+				} catch (IOException e1) {
+					e1.printStackTrace();
+				}
+			});
+			w.write("focus");
+			w.newLine();
 
-		// Collect data
-		try (BufferedReader b = new BufferedReader(
-				new InputStreamReader(new GZIPInputStream(new FileInputStream(inputFileName))))) {
-			Map<String, String> keyOutput = new HashMap<>();
-			Map<String, int[]> keyDiscourse = new HashMap<>();
+			// Collect data
+			try (BufferedReader b = new BufferedReader(
+					new InputStreamReader(new GZIPInputStream(new FileInputStream(inputFileName))))) {
+				Map<String, String> keyOutput = new HashMap<>();
+				Map<String, int[]> keyDiscourse = new HashMap<>();
 
-			for (String line; (line = b.readLine()) != null;) {
-				// Check for change in PMID
-				String[] tokens = p.split(line);
+				for (String line; (line = b.readLine()) != null;) {
+					// Check for change in PMID
+					String[] tokens = p.split(line);
 
-				if (tokens[1].length() < 20) {
-					String discourseName = cleanHeader(tokens[1]);
+					if (tokens[1].length() < 20) {
+						String discourseName = cleanHeader(tokens[1]);
 
-					if (headers.get(discourseName) != null) {
-						String key = tokens[0] + "|" + tokens[2];
-						String output = tokens[4];
+						if (headers.get(discourseName) != null) {
+							String key = tokens[0] + "|" + tokens[2];
+							String output = tokens[4];
 
-						keyOutput.put(key, output);
+							keyOutput.put(key, output);
 
-						int[] discourse = keyDiscourse.get(key);
+							int[] discourse = keyDiscourse.get(key);
 
-						if (discourse == null) {
-							discourse = new int[headers.size()];
-							keyDiscourse.put(key, discourse);
+							if (discourse == null) {
+								discourse = new int[headers.size()];
+								keyDiscourse.put(key, discourse);
+							}
+
+							discourse[headers.get(discourseName)] = 1;
 						}
-
-						discourse[headers.get(discourseName)] = 1;
 					}
 				}
+
+				// Print data
+				keyOutput.entrySet().stream().forEach(e -> {
+					try {
+						w.write(e.getKey());
+						w.write(",");
+						for (int d : keyDiscourse.get(e.getKey())) {
+							w.write(String.valueOf(d));
+							w.write(",");
+						}
+
+						w.write(e.getValue().equals("Y") ? "1" : "0");
+						w.newLine();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				});
 			}
-
-			// Print data
-			keyOutput.entrySet().stream().forEach(e -> {
-				for (int d : keyDiscourse.get(e.getKey())) {
-					System.out.print(d);
-					System.out.print(",");
-				}
-
-				System.out.println(e.getValue().equals("Y") ? 1 : 0);
-			});
 		}
 
 		return 0;
