@@ -26,9 +26,7 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 	private String inputFileName;
 
 	private static Map<String, Integer> getHeaders(String fileName) throws FileNotFoundException, IOException {
-		Map<String, Integer> output = new HashMap<>();
-
-		int i = 0;
+		Map<String, Integer> tagCount = new HashMap<>();
 
 		try (BufferedReader b = new BufferedReader(
 				new InputStreamReader(new GZIPInputStream(new FileInputStream(fileName))))) {
@@ -39,13 +37,22 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 				if (tokens[1].length() < 20) {
 					String cleanString = cleanHeader(tokens[1]);
 
-					if (output.get(cleanString) == null) {
-						output.put(cleanHeader(tokens[1]), i);
-						i++;
+					if (tagCount.get(cleanString) == null) {
+						tagCount.put(cleanString, 1);
+					} else {
+						tagCount.put(cleanString, tagCount.get(cleanString) + 1);
 					}
 				}
 			}
 		}
+
+		Map<String, Integer> output = new HashMap<>();
+
+		tagCount.entrySet().forEach(e -> {
+			if (e.getValue() > 10) {
+				output.put(e.getKey(), output.size());
+			}
+		});
 
 		return output;
 	}
@@ -78,21 +85,23 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 				String[] tokens = p.split(line);
 
 				if (tokens[1].length() < 20) {
-
-					String key = tokens[0] + "|" + tokens[2];
-					String output = tokens[4];
 					String discourseName = cleanHeader(tokens[1]);
 
-					keyOutput.put(key, output);
+					if (headers.get(discourseName) != null) {
+						String key = tokens[0] + "|" + tokens[2];
+						String output = tokens[4];
 
-					int[] discourse = keyDiscourse.get(key);
+						keyOutput.put(key, output);
 
-					if (discourse == null) {
-						discourse = new int[headers.size()];
-						keyDiscourse.put(key, discourse);
+						int[] discourse = keyDiscourse.get(key);
+
+						if (discourse == null) {
+							discourse = new int[headers.size()];
+							keyDiscourse.put(key, discourse);
+						}
+
+						discourse[headers.get(discourseName)] = 1;
 					}
-
-					discourse[headers.get(discourseName)] = 1;
 				}
 			}
 
