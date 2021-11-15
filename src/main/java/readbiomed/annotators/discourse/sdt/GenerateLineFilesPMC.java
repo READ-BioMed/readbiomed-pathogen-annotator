@@ -19,7 +19,7 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 	private static Pattern p = Pattern.compile("\\|");
 
 	private static String cleanHeader(String string) {
-		return string.trim().toLowerCase().replaceAll("^[0-9i]+. ", "");
+		return string.trim().toLowerCase().replaceAll("^[0-9i]+.? ", "").trim();
 	}
 
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
@@ -49,7 +49,7 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 		Map<String, Integer> output = new HashMap<>();
 
 		tagCount.entrySet().forEach(e -> {
-			if (e.getValue() > 10) {
+			if (e.getValue() > 50) {
 				output.put(e.getKey(), output.size());
 			}
 		});
