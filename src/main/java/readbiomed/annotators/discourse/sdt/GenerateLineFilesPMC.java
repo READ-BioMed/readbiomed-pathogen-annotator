@@ -21,7 +21,8 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 	private static Pattern p = Pattern.compile("\\|");
 
 	private static String cleanHeader(String string) {
-		return string.trim().toLowerCase().replaceAll("^[0-9i]+.? ", "").trim();
+		return string.trim().toLowerCase().replace('\u00A0', ' ').replace('\u00C2', ' ').replaceAll("^[0-9i]+.? ", "")
+				.trim();
 	}
 
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
@@ -41,10 +42,12 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 				if (tokens[1].length() < 20) {
 					String cleanString = cleanHeader(tokens[1]);
 
-					if (tagCount.get(cleanString) == null) {
-						tagCount.put(cleanString, 1);
-					} else {
-						tagCount.put(cleanString, tagCount.get(cleanString) + 1);
+					if (cleanString.length() > 0) {
+						if (tagCount.get(cleanString) == null) {
+							tagCount.put(cleanString, 1);
+						} else {
+							tagCount.put(cleanString, tagCount.get(cleanString) + 1);
+						}
 					}
 				}
 			}
@@ -74,7 +77,7 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 		try (BufferedWriter w = new BufferedWriter(new FileWriter(outputFileName))) {
 			// Print header
 			w.write("key,");
-			
+
 			headers.entrySet().stream().sorted(Map.Entry.comparingByValue()).forEach(e -> {
 				try {
 					w.write(e.getKey());
