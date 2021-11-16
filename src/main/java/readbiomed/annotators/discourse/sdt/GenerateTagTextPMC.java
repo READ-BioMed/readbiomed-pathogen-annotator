@@ -29,7 +29,7 @@ public class GenerateTagTextPMC implements Callable<Integer> {
 	private String inputFileName;
 	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/training.pipe")
 	private String outputFileName;
-	@Parameters(index = "2", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/sdt.pmc.clean.train.csv")
+	@Parameters(index = "2", description = "Key file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/sdt.pmc.clean.train.csv")
 	private String keyFileName;
 	
 	@Override

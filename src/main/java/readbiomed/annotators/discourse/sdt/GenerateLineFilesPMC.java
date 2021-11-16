@@ -14,13 +14,15 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
 import picocli.CommandLine;
+import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 
+@Command(name = "GenerateLineFilesPMC", mixinStandardHelpOptions = true, version = "GenerateLineFilesPMC 0.1", description = "SDT line generation.")
 public class GenerateLineFilesPMC implements Callable<Integer> {
 
 	private static Pattern p = Pattern.compile("\\|");
 
-	private static String cleanHeader(String string) {
+	protected static String cleanHeader(String string) {
 		return string.trim().toLowerCase().replace('\u00A0', ' ').replace('\u00C2', ' ').replaceAll("^[0-9i]+.? ", "")
 				.trim();
 	}
