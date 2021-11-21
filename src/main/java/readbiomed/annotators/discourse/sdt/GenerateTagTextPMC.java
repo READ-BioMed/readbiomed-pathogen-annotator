@@ -25,7 +25,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "GenerateTagTextPMC", mixinStandardHelpOptions = true, version = "GenerateTagTextPMC 0.1", description = "SDT line generation.")
 public class GenerateTagTextPMC implements Callable<Integer> {
 
-	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/dataset.pmc.pipe.gz")
+	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
 	private String inputFileName;
 	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/training.pipe")
 	private String outputFileName;

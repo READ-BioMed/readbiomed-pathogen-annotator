@@ -101,23 +101,25 @@ public class GenerateLineFilesPMC implements Callable<Integer> {
 					// Check for change in PMID
 					String[] tokens = p.split(line);
 
-					if (tokens[1].length() < 20) {
-						String discourseName = cleanHeader(tokens[1]);
+					if (tokens[3].contains("@PATHOGEN$")) {
+						if (tokens[1].length() < 20) {
+							String discourseName = cleanHeader(tokens[1]);
 
-						if (headers.get(discourseName) != null) {
-							String key = tokens[0] + "|" + tokens[2];
-							String output = tokens[4];
+							if (headers.get(discourseName) != null) {
+								String key = tokens[0] + "|" + tokens[2];
+								String output = tokens[4];
 
-							keyOutput.put(key, output);
+								keyOutput.put(key, output);
 
-							int[] discourse = keyDiscourse.get(key);
+								int[] discourse = keyDiscourse.get(key);
 
-							if (discourse == null) {
-								discourse = new int[headers.size()];
-								keyDiscourse.put(key, discourse);
+								if (discourse == null) {
+									discourse = new int[headers.size()];
+									keyDiscourse.put(key, discourse);
+								}
+
+								discourse[headers.get(discourseName)] = 1;
 							}
-
-							discourse[headers.get(discourseName)] = 1;
 						}
 					}
 				}

@@ -43,7 +43,8 @@ public class PMCSaxParser extends DefaultHandler {
 			body = true;
 		} else if (body && qName.equalsIgnoreCase("sec")) {
 			secCount++;
-		} else if (body && secCount == 1 && qName.equalsIgnoreCase("title") && currentSection.getTitle().length() == 0) {
+		} else if (body && secCount == 1 && qName.equalsIgnoreCase("title")
+				&& currentSection.getTitle().length() == 0) {
 			tag = Tag.SecTitle;
 		} else if (body && secCount > 0 && qName.equalsIgnoreCase("p")) {
 			tag = Tag.SecText;
@@ -63,8 +64,8 @@ public class PMCSaxParser extends DefaultHandler {
 			abstractText.setLength(0);
 			sections = new LinkedList<>();
 		} else if (qName.equalsIgnoreCase("article-id") || qName.equalsIgnoreCase("article-title")
-				|| qName.equalsIgnoreCase("abstract") || qName.equalsIgnoreCase("title")
-				|| qName.equalsIgnoreCase("p")) { // Clear tag
+				|| qName.equalsIgnoreCase("abstract")
+				|| (body && (qName.equalsIgnoreCase("title") || qName.equalsIgnoreCase("p")))) { // Clear tag
 			tag = null;
 		} else if (qName.equalsIgnoreCase("article-meta")) {
 			articleMeta = false;
@@ -81,7 +82,7 @@ public class PMCSaxParser extends DefaultHandler {
 
 				currentSection.setTitle(currentSection.getTitle().replaceAll("\n", " ").replaceAll("  *", " ").trim());
 				currentSection.setText(currentSection.getText().replaceAll("\n", " ").replaceAll("  *", " ").trim());
-				
+
 				sections.add(currentSection);
 				currentSection = new PMCSection();
 			}

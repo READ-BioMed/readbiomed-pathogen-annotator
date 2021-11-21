@@ -24,7 +24,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "GenerateTextPMC", mixinStandardHelpOptions = true, version = "GenerateTextPMC 0.1", description = "SDT line generation.")
 public class GenerateTextPMC implements Callable<Integer> {
 
-	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/dataset.pmc.pipe.gz")
+	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
 	private String inputFileName;
 	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt/PMC/training.all.pipe")
 	private String outputFileName;
@@ -90,7 +90,7 @@ public class GenerateTextPMC implements Callable<Integer> {
 									keyStrings.put(key, string);
 								}
 
-								string.append(" ").append(tokens[3]);
+								string.append(" @").append(tokens[1]).append(": ").append(tokens[3]);
 							}
 						}
 					}

@@ -81,11 +81,12 @@ public class RelevantPathogenPMCSet implements Callable<Integer> {
 
 						String pmid = ViewUriUtil.getURI(jCas).toString();
 
+						Set<String> ids = new HashSet<>();
+
+						List<NamedEntityMention> list = new ArrayList<>();
+
 						// Perform analysis per section
 						for (Section section : JCasUtil.select(jCas, Section.class)) {
-
-							List<NamedEntityMention> list = new ArrayList<>();
-							Set<String> ids = new HashSet<>();
 
 							for (NamedEntityMention ne : JCasUtil.selectCovered(jCas, NamedEntityMention.class,
 									section)) {
@@ -116,38 +117,42 @@ public class RelevantPathogenPMCSet implements Callable<Integer> {
 							}
 
 							Collections.sort(list, new RelevantPathogenSet().new SortNamedEntityMentions());
+						}
 
-							ids.stream().filter(id -> id.startsWith("ncbi-")).forEach(id -> {
-								Set<String> pmidsNCBI = mapNCBI.get(id);
+						ids.stream().filter(id -> id.startsWith("ncbi-")).forEach(id -> {
+							Set<String> pmidsNCBI = mapNCBI.get(id);
 
-								// The pathogen should exist in our set
-								if (pmidsNCBI != null) {
-									// Get new text string
+							// The pathogen should exist in our set
+							if (pmidsNCBI != null) {
+								// Determine class based on presence in pmidsNCBI
+								String category = (pmidsNCBI.contains(pmid) ? "Y" : "N");
 
+								// Get new text string
+								for (Section section : JCasUtil.select(jCas, Section.class)) {
 									String text = section.getCoveredText();
 
 									for (NamedEntityMention ne : list) {
-										if (ne.getMentionId().contentEquals(id)) {
-											if (ne.getMentionId().equals(id)) {
-												int begin = ne.getBegin() - section.getBegin();
-												int end = ne.getEnd() - section.getBegin();
+										// If entity in section
+										if (ne.getBegin() >= section.getBegin() && ne.getEnd() <= section.getEnd()) {
+											if (ne.getMentionId().contentEquals(id)) {
+												if (ne.getMentionId().equals(id)) {
+													int begin = ne.getBegin() - section.getBegin();
+													int end = ne.getEnd() - section.getBegin();
 
-												text = text.substring(0, begin) + "@PATHOGEN$" + text.substring(end);
+													text = text.substring(0, begin) + "@PATHOGEN$"
+															+ text.substring(end);
+												}
 											}
 										}
 									}
-
-									// Determine class based on presence in pmidsNCBI
-									String category = (pmidsNCBI.contains(pmid) ? "Y" : "N");
 
 									// Generate example
 									w.println(pmid + "|" + section.getSectionType() + "|" + id + "|"
 											+ text.replaceAll("\\|", " ").replaceAll("\n", " ").trim() + "|"
 											+ category);
 								}
-							});
-
-						}
+							}
+						});
 
 						jCas.reset();
 					}
