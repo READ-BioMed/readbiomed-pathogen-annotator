@@ -29,9 +29,9 @@ public class GenerateLinesFilesPMCSplit implements Callable<Integer> {
 
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.csv")
 	private String inputFileName;
-	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.clean.train.csv")
+	@Parameters(index = "1", description = "Output file name Train.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.clean.train.csv")
 	private String outputFileNameTrain;
-	@Parameters(index = "1", description = "Output file name.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.clean.test.csv")
+	@Parameters(index = "1", description = "Output file name Test.", defaultValue = "/Users/ajimeno/Documents/UoM/sdt.pmc.clean.test.csv")
 	private String outputFileNameTest;
 
 	@Override
