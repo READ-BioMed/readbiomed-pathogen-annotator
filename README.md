@@ -2,6 +2,7 @@
 
 Documentation under development.
 
+This package has been developed to annotate mentions of pathogens in the scientific literature.
 
 This package has been tested with Java 11 and Maven 3.6.3.
 
