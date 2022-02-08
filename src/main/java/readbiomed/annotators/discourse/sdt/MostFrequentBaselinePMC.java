@@ -56,7 +56,7 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 				if (tokens.length == 5) {
 					gt.put(tokens[0] + "|" + tokens[2], tokens[4]);
 
-					int occurrences = tokens[3].split("@PATHOGEN$").length - 1;
+					int occurrences = tokens[3].split("@PATHOGEN\\$").length - 1;
 
 					Map<String, Integer> counts = countPMIDPath.get(tokens[0]);
 
