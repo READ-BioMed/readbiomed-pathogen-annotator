@@ -30,13 +30,23 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
 	private String inputFileName;
 
+	@Parameters(index = "0", description = "Use IDF.", defaultValue = "false")
+	private String useIDFString;
+
 	@Override
 	public Integer call() throws Exception {
+		boolean useIDF = Boolean.parseBoolean(useIDFString);
+
 		Map<String, String> gt = new HashMap<>();
 
 		Map<String, Map<String, Integer>> countPMIDPath = new HashMap<>();
 
 		Set<String> predictions = new HashSet<>();
+
+		// Used for idf estimation
+		Map<String, Set<String>> pathogenDocument = new HashMap<>();
+
+		Set<String> documents = new HashSet<>();
 
 		try (BufferedReader b = new BufferedReader(
 				new InputStreamReader(new GZIPInputStream(new FileInputStream(inputFileName))))) {
@@ -60,21 +70,39 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 					} else {
 						counts.put(tokens[2], counts.get(tokens[2]) + occurrences);
 					}
+
+					Set<String> docs = pathogenDocument.get(tokens[2]);
+
+					if (docs == null) {
+						docs = new HashSet<String>();
+						pathogenDocument.put(tokens[2], docs);
+					}
+
+					docs.add(tokens[0]);
+
+					documents.add(tokens[0]);
 				}
 			}
 		}
 
 		countPMIDPath.entrySet().forEach(e -> {
 			String pathogen = null;
-			int max = -1;
+			double max = -1;
 
 			for (Map.Entry<String, Integer> entry : e.getValue().entrySet()) {
+				double weight = (double) entry.getValue();
+
+				if (useIDF) {
+					double idf = Math.log(documents.size() / (double) pathogenDocument.get(entry.getKey()).size());
+					weight *= idf;
+				}
+
 				if (max == -1) {
 					pathogen = entry.getKey();
-					max = entry.getValue();
-				} else if (entry.getValue() > max) {
+					max = weight;
+				} else if (weight > max) {
 					pathogen = entry.getKey();
-					max = entry.getValue();
+					max = weight;
 				}
 			}
 
@@ -87,6 +115,8 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 		long truePositivesCount = predictions.stream().filter(e -> gt.get(e).equals("Y")).count();
 		long predictionsCount = predictions.size();
 
+		System.out.println(documents.size());
+		
 		System.out.println("Positives: " + positivesCount);
 		System.out.println("True Positives: " + truePositivesCount);
 		System.out.println("Predictions: " + predictionsCount);
