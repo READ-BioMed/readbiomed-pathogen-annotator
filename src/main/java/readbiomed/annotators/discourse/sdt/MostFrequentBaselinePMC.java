@@ -72,6 +72,9 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 				if (max == -1) {
 					pathogen = entry.getKey();
 					max = entry.getValue();
+				} else if (entry.getValue() > max) {
+					pathogen = entry.getKey();
+					max = entry.getValue();
 				}
 			}
 
