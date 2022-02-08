@@ -108,7 +108,7 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 
 			String prediction = e.getKey() + "|" + pathogen;
 			predictions.add(prediction);
-			System.out.println(prediction + "|" + gt.get(prediction));
+			System.out.println(prediction + "|" + gt.get(prediction) + "|" + max);
 		});
 
 		long positivesCount = gt.entrySet().stream().filter(e -> e.getValue().equals("Y")).count();
