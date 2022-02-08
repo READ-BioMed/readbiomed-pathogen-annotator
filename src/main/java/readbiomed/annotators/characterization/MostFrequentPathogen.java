@@ -3,6 +3,10 @@ package readbiomed.annotators.characterization;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Pattern;
 
@@ -29,6 +33,9 @@ public class MostFrequentPathogen implements Callable<Integer> {
 	@Parameters(index = "0", description = "Input file name.")
 	private String inputFileName;
 
+	@Parameters(index = "1", description = "Use IDF.", defaultValue = "false")
+	private String useIDFString;
+
 	private static Pattern p = Pattern.compile("\\|");
 
 	private int countPathogen(String text) {
@@ -37,6 +44,33 @@ public class MostFrequentPathogen implements Callable<Integer> {
 
 	@Override
 	public Integer call() throws Exception {
+		boolean useIDF = Boolean.parseBoolean(useIDFString);
+
+		Map<String, Set<String>> pathogenDocuments = new HashMap<>();
+		Set<String> allDocuments = new HashSet<>();
+
+		// Estimate pathogen/document count
+		if (useIDF) {
+			try (BufferedReader b = new BufferedReader(new FileReader(inputFileName))) {
+				if (b.readLine() != null) {
+					for (String line; (line = b.readLine()) != null;) {
+						// PMID|Text|Category
+						String[] tokens = p.split(line);
+
+						Set<String> documents = pathogenDocuments.get(tokens[3]);
+
+						if (documents == null) {
+							documents = new HashSet<>();
+							pathogenDocuments.put(tokens[3], documents);
+						}
+
+						documents.add(tokens[0]);
+
+						allDocuments.add(tokens[0]);
+					}
+				}
+			}
+		}
 
 		try (BufferedReader b = new BufferedReader(new FileReader(inputFileName))) {
 			// Remove first line - header
@@ -46,21 +80,26 @@ public class MostFrequentPathogen implements Callable<Integer> {
 				int tp = 0;
 				int positives = 0;
 				int fp = 0;
-				int max_count = 0;
+				double max_count = 0.0;
 				String max_class = "";
 
 				for (String line; (line = b.readLine()) != null;) {
-					// PMID|Test|Category
+					// PMID|Text|Category
 					String[] tokens = p.split(line);
 
 					// @PATHOGEN$ mentions count
-					int count = countPathogen(tokens[1]);
+					double count = (double) countPathogen(tokens[1]);
+
+					if (useIDF) {
+						count *= Math.log(allDocuments.size() / (double) pathogenDocuments.get(tokens[3]).size());
+					}
 
 					if (tokens[2].equals("Y")) {
 						positives++;
 					}
 
-					if (tokens.length == 3) {
+					if (tokens.length == 4) {
+						System.out.println(line + "|" + count);
 						if (pmid == null) {
 							pmid = tokens[0];
 							doc_count++;
@@ -97,18 +136,18 @@ public class MostFrequentPathogen implements Callable<Integer> {
 					}
 				}
 
-				double precision = (double)tp / (tp + fp);
-				double recall = (double)tp / positives;
+				double precision = (double) tp / (tp + fp);
+				double recall = (double) tp / positives;
 				double f1 = 2 * precision * recall / (precision + recall);
 
 				System.out.println("TP: " + tp);
 				System.out.println("FP: " + fp);
 				System.out.println("Positives: " + positives);
-				
+
 				System.out.println("Precision: " + precision);
 				System.out.println("Recall: " + recall);
 				System.out.println("F1: " + f1);
-				
+
 				System.out.println("Documents: " + doc_count);
 			}
 		}
