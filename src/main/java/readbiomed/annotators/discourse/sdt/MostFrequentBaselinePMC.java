@@ -30,7 +30,7 @@ public class MostFrequentBaselinePMC implements Callable<Integer> {
 	@Parameters(index = "0", description = "Input file name.", defaultValue = "/Users/ajimeno/Documents/UoM/dataset.pmc.pipe.gz")
 	private String inputFileName;
 
-	@Parameters(index = "0", description = "Use IDF.", defaultValue = "false")
+	@Parameters(index = "1", description = "Use IDF.", defaultValue = "false")
 	private String useIDFString;
 
 	@Override
