@@ -133,7 +133,7 @@ public class RelevantPathogenSet implements Callable<Integer> {
 
 								// Generate example
 								w.println(pmid + "|" + text.replaceAll("\\|", " ").replaceAll("\n", " ").trim() + "|"
-										+ category);
+										+ category + "|" + id);
 							}
 						});
 
