@@ -60,7 +60,7 @@ The java code needs to be recompiled running `mvn install` as explained in the i
 
 There are several data sets that have been used for pathogen characterization.
 
-To train a classifier to predict if a citation discusses pathogens is available here.
+To train a classifier to predict if a citation discusses pathogens is available [here](./data/document-relevant).
 
 To train a classifier to predict pathogen relevance a large data set is available [here](https://zenodo.org/record/5866759).
 
