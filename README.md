@@ -36,6 +36,19 @@ The class [PathogenCharacterizationAnnotator](https://github.com/READ-BioMed/rea
 An example that uses the PathogenCharacterizationAnnotator is available [here](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/java/readbiomed/annotators/characterization/PathogenExperimenter.java). 
 The ground truth is available from the manual annotation from this [repository](https://github.com/READ-BioMed/readbiomed-pathogens-dataset).
 
+
+```
+mvn exec:java -Dexec.mainClass="readbiomed.annotators.characterization.PathogenExperimenter" -Dexec.args="[ConceptMapper_Dictionary] [ground_truth_csv] [articles-txt-format]"
+```
+
+A dictionary can be build using the class [DictionaryBuilder](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/java/readbiomed/annotators/dictionary/pathogens/build/DictionaryBuilder.java).
+It needs the ncbitaxon.owl file available from the OBO repositories.
+The output is an XML dictionary suitable for UIMA's ConceptMapper.
+
+```
+mvn exec:java -Dexec.mainClass="readbiomed.annotators.dictionary.pathogens.build.DictionaryBuilder" -Dexec.args="[NCBI_owl_file] [ConceptMapper_dictionary_output_file] [taxonomic_pathogens]"
+```
+
 ## Training of categorization models using MTIMLExtension
 
 ## Training of categorization models using pytorch models
