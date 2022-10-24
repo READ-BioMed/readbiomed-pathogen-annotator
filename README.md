@@ -49,9 +49,15 @@ The output is an XML dictionary suitable for UIMA's ConceptMapper.
 mvn exec:java -Dexec.mainClass="readbiomed.annotators.dictionary.pathogens.build.DictionaryBuilder" -Dexec.args="[NCBI_owl_file] [ConceptMapper_dictionary_output_file] [taxonomic_pathogens]"
 ```
 
-## Training of categorization models using MTIMLExtension
+## Categorization models using MTIMLExtension
 
-## Training of categorization models using pytorch models
+## Categorization models using pytorch models
+
+To train and use the BERT like models, set the [constants](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/constants.py) as needed.
+BERT like models are connected to java classes of the pathogen annotator using a server/client architecture.
+Once a model is trained using [BERT](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/train.py) or [longformer](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/train-longformer.py), a server needs to be started.
+By default port 5000 is used, the [server](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/server.py) code can be updated to change it.
+If the port is changed, the java client needs to be updated and the java code recompiled running `mvn install` as explained in the installation step.
 
 # References
 
