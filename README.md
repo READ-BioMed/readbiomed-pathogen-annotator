@@ -31,6 +31,10 @@ pip install -r requirements.txt
 
 ## Pathogen characterisation
 
+The class [PathogenCharacterizationAnnotator](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/java/readbiomed/annotators/characterization/PathogenCharacterizationAnnotator.java) defines the UIMA annotator for the characterisation of pathogens.
+
+An example that uses the PathogenCharacterizationAnnotator is available [here](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/java/readbiomed/annotators/characterization/PathogenExperimenter.java). 
+The ground truth is available from the manual annotation from this [repository](https://github.com/READ-BioMed/readbiomed-pathogens-dataset).
 
 ## Training of categorization models using MTIMLExtension
 
