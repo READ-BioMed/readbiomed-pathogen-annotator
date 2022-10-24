@@ -51,13 +51,20 @@ mvn exec:java -Dexec.mainClass="readbiomed.annotators.dictionary.pathogens.build
 
 ## Categorization models using MTIMLExtension
 
+[MTIMLExtension](https://github.com/READ-BioMed/MTIMLExtension) implements some text classifiers using fast and memory efficient methods for training and annotation in java.
+It extends the [MTIML](https://lhncbc.nlm.nih.gov/ii/tools/MTI_ML.html) package.
+Training and testing classifiers is explained in great detail [here](https://lhncbc.nlm.nih.gov/ii/tools/MTI_ML.html).
+
+
+
 ## Categorization models using pytorch models
 
 To train and use the BERT like models, set the [constants](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/constants.py) as needed.
 BERT like models are connected to java classes of the pathogen annotator using a server/client architecture.
 Once a model is trained using [BERT](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/train.py) or [longformer](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/train-longformer.py), a server needs to be started.
+
 By default port 5000 is used, the [server](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/python/server.py) code can be updated to change it.
-If the port is changed, the java client needs to be updated and the java code recompiled running `mvn install` as explained in the installation step.
+If the port is changed, the java [annotator](https://github.com/READ-BioMed/readbiomed-pathogen-annotator/blob/main/src/main/java/readbiomed/annotators/characterization/PathogenCharacterizationAnnotator.java) needs to be updated and the java code recompiled running `mvn install` as explained in the installation step.
 
 # References
 
