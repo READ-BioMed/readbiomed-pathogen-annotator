@@ -12,4 +12,21 @@ Characterisation of pathogens relies on machine learning algorithms. There is py
 
 This package has been tested with Java 11 and Maven 3.6.3.
 
-To install it, once it is cloned, run mvn install
+# Installation
+
+Prior to installing this package, you need to manually install [MTIMLExtention](https://github.com/READ-BioMed/MTIMLExtension) and [readbiomed-ncbi-pathogen-dataset-generation](https://github.com/READ-BioMed/readbiomed-ncbi-pathogen-dataset-generation).
+
+Then, once it is cloned, run `mvn install` from the directory it was cloned into 
+
+# References
+
+If you use this work in your research, remember to cite it:
+
+`
+@article{jimeno2022classifying,
+  title={Classifying literature mentions of biological pathogens as experimentally studied using natural language processing},
+  author={Jimeno Yepes, Antonio and Verspoor, Karin},
+  journal={Journal of Biomedical Semantics},
+  year={2022}
+}
+` 
